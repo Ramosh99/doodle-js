@@ -100,11 +100,6 @@ const Canvas = () => {
         link.href = url;
         link.download = 'canvas.json';
         link.click();
-
-        //save as a pdf
-        const doc = new jsPDF();
-    // Calculate the dimensions of the canvas in PDF units (points, pt)
-
     };
 
     const handleLoad = (event) => {
