@@ -1,7 +1,9 @@
 'use client'; 
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, {useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs/bundled/rough.esm'; // Import rough.js for sketchy drawing
 import Buttons from './ButtonComponents/Button'; // Importing the Buttons component
+
+
 
 // Configure rough generator with smooth lines
 const generator = rough.generator({
