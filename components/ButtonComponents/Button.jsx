@@ -1,12 +1,13 @@
 import React from 'react';
 
-// Component for the control buttons
-const Buttons = ({ handleModeChange }) => {
+const Buttons = ({ handleModeChange, handleSave, handleLoad }) => {
     return (
-        <div style={{ position: 'fixed', top: 10, left: 10, zIndex: 1 }}>
-            <button onClick={() => handleModeChange('grab')}>Grab</button>
+        <div style={{ position: 'absolute', top: 0, left: 0, padding: 10 }}>
             <button onClick={() => handleModeChange('rectangle')}>Rectangle</button>
             <button onClick={() => handleModeChange('line')}>Line</button>
+            <button onClick={() => handleModeChange('grab')}>Grab</button>
+            <button onClick={handleSave}>Save</button>
+            <input type="file" onChange={handleLoad} />
         </div>
     );
 };

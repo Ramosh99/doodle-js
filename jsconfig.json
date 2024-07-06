@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".", // This should be set to the base directory of your project
     "paths": {
       "@/*": ["./src/*"]
     }
