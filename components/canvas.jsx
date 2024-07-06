@@ -2,7 +2,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
-import jsPDF from 'jspdf';
+//import jsPDF from 'jspdf';
 
 const generator = rough.generator({
     roughness: 0,
@@ -27,7 +27,7 @@ const Canvas = () => {
     const [panning, setPanning] = useState(false);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [mode, setMode] = useState('rectangle');
+    const [mode, setMode] = useState('rectangle');//active tool
     const canvasRef = useRef(null);
 
     useLayoutEffect(() => {
@@ -132,7 +132,7 @@ const Canvas = () => {
 
     return (
         <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
-            <Buttons handleModeChange={handleModeChange} handleSave={handleSave} handleLoad={handleLoad} />
+            <Buttons handleModeChange={handleModeChange} handleSave={handleSave} handleLoad={handleLoad} mode={mode}/>
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
