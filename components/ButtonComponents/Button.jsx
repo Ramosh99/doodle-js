@@ -4,6 +4,7 @@ import { RiRectangleLine } from "react-icons/ri";
 import { GoDash } from "react-icons/go";
 import { FiSave } from "react-icons/fi";
 import { LuDownload } from "react-icons/lu";
+import { LuMousePointer2 } from "react-icons/lu";
 
 const Buttons = ({ handleModeChange, handleSave, handleLoad ,mode}) => {
 
@@ -21,6 +22,9 @@ const Buttons = ({ handleModeChange, handleSave, handleLoad ,mode}) => {
             width:'600px',height:'30px',backgroundColor:'white',borderRadius:'4px',
             boxShadow:'0 0 3px lightGrey' 
             }}>
+
+            {/* --- Mouse Pointer ---- */}
+            <LuMousePointer2 className='selectIcon'></LuMousePointer2>
 
             {/* --- Grab ---- */}
             <IoHandLeftOutline
