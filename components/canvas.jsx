@@ -149,24 +149,7 @@ const Canvas = () => {
         };
     
         reader.readAsText(file);
-    };
-
-    const handleUndo = () => {
-        if (undoStack.length  === 0) return;
-        const newElements = undoStack[undoStack.length - 1];
-        setRedoStack((prev) => [...prev, elements]);
-        setUndoStack((prev) => prev.slice(0, prev.length - 1));
-        setElements(newElements);
-    };
-
-    const handleRedo = () => {
-        if (redoStack.length === 0) return;
-        const newElements = redoStack[redoStack.length - 1];
-        setUndoStack((prev) => [...prev, elements]);
-        setRedoStack((prev) => prev.slice(0, prev.length - 1));
-        setElements(newElements);
-    };
-    
+    };    
 
     return (
         <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
@@ -175,10 +158,12 @@ const Canvas = () => {
                 handleSave={handleSave} 
                 handleLoad={handleLoad} 
                 mode={mode} 
-                handleUndo={handleUndo} 
-                handleRedo={handleRedo} 
+                setElements={setElements}
                 undoStack={undoStack} 
                 redoStack={redoStack}
+                setUndoStack={setUndoStack}
+                setRedoStack={setRedoStack}
+                elements={elements}
                 />
             <canvas
                 ref={canvasRef}

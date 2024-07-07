@@ -6,8 +6,9 @@ import { FiSave } from "react-icons/fi";
 import { LuDownload } from "react-icons/lu";
 import { LuMousePointer2 } from "react-icons/lu";
 import { GrUndo, GrRedo } from "react-icons/gr";
+import Undoredo from './Clicks/Undoredo';
 
-const Buttons = ({ handleModeChange, handleSave, handleLoad ,mode, handleUndo, handleRedo, undoStack, redoStack}) => {
+const Buttons = ({ handleModeChange,elements, handleSave, handleLoad ,mode, undoStack, redoStack,setUndoStack,setRedoStack,setElements}) => {
 
     const fileInputRef = useRef(null);//ref to file chooser
 
@@ -59,26 +60,10 @@ const Buttons = ({ handleModeChange, handleSave, handleLoad ,mode, handleUndo, h
 
                 {/* --- Load ---- */}
                 <LuDownload onClick={handleIconClick} className='selectIcon' ></LuDownload>
-                {/*---This is hidden--------- triggered by above icon */}
-                <input ref={fileInputRef} type="file" style={{display:'none'}} onChange={handleLoad} />
 
             </div>
-
-            <div style={{ 
-                position: 'absolute', bottom:'10px', left:'20px',
-                display:'flex',justifyContent:'space-around',alignItems:'center',
-                width:'100px',height:'30px',backgroundColor:'white',borderRadius:'4px',
-                boxShadow:'0 0 3px lightGrey' 
-                }}>
-
-                {/* --- Undo ---- */}
-                <GrUndo onClick={handleUndo} style={{ color: undoStack.length === 0 ? 'gray' : 'inherit' }} />
-
-                {/* --- Redo ---- */}
-                <GrRedo onClick={handleRedo} style={{ color: redoStack.length === 0 ? 'gray' : 'inherit' }} />
-
-            </div>
-
+                {/* --- UndoRedo ---- */}
+                <Undoredo elements={elements} fileInputRef={fileInputRef} handleLoad={handleLoad} undoStack={undoStack} redoStack={redoStack} setUndoStack={setUndoStack} setRedoStack={setRedoStack} setElements={setElements}/>
         </>
     );
 };
