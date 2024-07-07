@@ -121,15 +121,15 @@ const Canvas = () => {
         setMode(newMode);
     };
 
-    const handleSave = () => {
-        const json = JSON.stringify(elements);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'canvas.json';
-        link.click();
-    };
+    // const handleSave = () => {
+    //     const json = JSON.stringify(elements);
+    //     const blob = new Blob([json], { type: 'application/json' });
+    //     const url = URL.createObjectURL(blob);
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.download = 'canvas.json';
+    //     link.click();
+    // };
 
     const handleLoad = (event) => {
         const file = event.target.files[0];
@@ -155,7 +155,7 @@ const Canvas = () => {
         <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
             <Buttons 
                 handleModeChange={handleModeChange} 
-                handleSave={handleSave} 
+                // handleSave={handleSave} 
                 handleLoad={handleLoad} 
                 mode={mode} 
                 setElements={setElements}
