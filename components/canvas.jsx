@@ -30,7 +30,7 @@ const Canvas = () => {
     const [panning, setPanning] = useState(false);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [mode, setMode] = useState(ElementType.RECTANGLE);//active tool
+    const [mode, setMode] = useState("grab");//active tool
     const canvasRef = useRef(null);
 
     const [undoStack, setUndoStack] = useState([]);
