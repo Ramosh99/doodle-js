@@ -1,9 +1,29 @@
+import { useEffect } from "react";
 import React from 'react';
 import { GrUndo, GrRedo } from "react-icons/gr";
 
 
 
 const Undoredo = ({fileInputRef,handleLoad,elements,undoStack,redoStack,setUndoStack,setRedoStack,setElements}) => {
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault(); // Prevent browser default behavior (like undoing text input)
+                handleUndo();
+            } else if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault(); // Prevent browser default behavior (like redoing text input)
+                handleRedo();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [elements]); // Include elements as a dependency to update listener when elements change
+    
+    
     const handleUndo = () => {
         if (undoStack.length  === 0) return;
         const newElements = undoStack[undoStack.length - 1];

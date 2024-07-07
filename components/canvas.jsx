@@ -46,24 +46,6 @@ const Canvas = () => {
         elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
     }, [elements, pan, zoom]);
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.ctrlKey && e.key === 'z') {
-                e.preventDefault(); // Prevent browser default behavior (like undoing text input)
-                handleUndo();
-            } else if (e.ctrlKey && e.key === 'y') {
-                e.preventDefault(); // Prevent browser default behavior (like redoing text input)
-                handleRedo();
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [elements]); // Include elements as a dependency to update listener when elements change
-    
 
     const handleMouseDown = (e) => {
         if (mode === 'grab') {
