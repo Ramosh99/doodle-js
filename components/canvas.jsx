@@ -2,7 +2,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
-//import jsPDF from 'jspdf';
+import { ElementType, Rectangle, Line } from '../components/Types/types';
+
 
 const generator = rough.generator({
     roughness: 0,
@@ -11,15 +12,17 @@ const generator = rough.generator({
     bowing: 0,
 });
 
-function createRectangle(x1, y1, x2, y2) {
-    const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1);
-    return { type: 'rectangle', x1, y1, x2, y2, roughElement };
-}
+const createElement = {
+    [ElementType.RECTANGLE]: (x1, y1, x2, y2) => {
+        const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1);
+        return new Rectangle(x1, y1, x2, y2, roughElement);
+    },
+    [ElementType.LINE]: (x1, y1, x2, y2) => {
+        const roughElement = generator.line(x1, y1, x2, y2);
+        return new Line(x1, y1, x2, y2, roughElement);
+    }
 
-function createLine(x1, y1, x2, y2) {
-    const roughElement = generator.line(x1, y1, x2, y2);
-    return { type: 'line', x1, y1, x2, y2, roughElement };
-}
+};
 
 const Canvas = () => {
     const [elements, setElements] = useState([]);
@@ -27,7 +30,7 @@ const Canvas = () => {
     const [panning, setPanning] = useState(false);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [mode, setMode] = useState('rectangle');//active tool
+    const [mode, setMode] = useState("grab");//active tool
     const canvasRef = useRef(null);
 
     const [undoStack, setUndoStack] = useState([]);
@@ -43,24 +46,6 @@ const Canvas = () => {
         elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
     }, [elements, pan, zoom]);
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.ctrlKey && e.key === 'z') {
-                e.preventDefault(); // Prevent browser default behavior (like undoing text input)
-                handleUndo();
-            } else if (e.ctrlKey && e.key === 'y') {
-                e.preventDefault(); // Prevent browser default behavior (like redoing text input)
-                handleRedo();
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [elements]); // Include elements as a dependency to update listener when elements change
-    
 
     const handleMouseDown = (e) => {
         if (mode === 'grab') {
@@ -76,7 +61,8 @@ const Canvas = () => {
         const { clientX, clientY } = e;
         const x = clientX - pan.x / zoom;
         const y = clientY - pan.y / zoom;
-        const element = mode === 'rectangle' ? createRectangle(x, y, x, y) : createLine(x, y, x, y);
+
+        const element = createElement[mode](x, y, x, y);
         setElements((prev) => [...prev, element]);
     };
 
@@ -96,7 +82,7 @@ const Canvas = () => {
         const y = clientY - pan.y / zoom;
         const index = elements.length - 1;
         const { x1, y1 } = elements[index];
-        const updatedElement = mode === 'rectangle' ? createRectangle(x1, y1, x, y) : createLine(x1, y1, x, y);
+        const updatedElement = createElement[mode](x1, y1, x, y);
         const elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
         setElements(elementsCopy);
@@ -117,17 +103,6 @@ const Canvas = () => {
         setMode(newMode);
     };
 
-    const handleSave = () => {
-        // saev as a json
-        const json = JSON.stringify(elements);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'canvas.json';
-        link.click();
-    };
-
     const handleLoad = (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -139,43 +114,28 @@ const Canvas = () => {
     
             // Map loaded elements to their corresponding shapes
             const elementsToSet = loadedElements.map(({ type, x1, y1, x2, y2 }) => {
-                switch (type) {
-                    case 'rectangle':
-                        return createRectangle(x1, y1, x2, y2);
-                    case 'line':
-                        return createLine(x1, y1, x2, y2);
-                    default:
-                        return null; // Handle other types if needed
-                }
+                return createElement[type](x1, y1, x2, y2);
             }).filter(element => element !== null); // Remove any null elements
     
             setElements(elementsToSet);
         };
     
         reader.readAsText(file);
-    };
-
-    const handleUndo = () => {
-        if (undoStack.length  === 0) return;
-        const newElements = undoStack[undoStack.length - 1];
-        setRedoStack((prev) => [...prev, elements]);
-        setUndoStack((prev) => prev.slice(0, prev.length - 1));
-        setElements(newElements);
-    };
-
-    const handleRedo = () => {
-        if (redoStack.length === 0) return;
-        const newElements = redoStack[redoStack.length - 1];
-        setUndoStack((prev) => [...prev, elements]);
-        setRedoStack((prev) => prev.slice(0, prev.length - 1));
-        setElements(newElements);
-    };
-    
+    };    
 
     return (
         <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
-            <Buttons handleModeChange={handleModeChange} handleSave={handleSave} handleLoad={handleLoad} mode={mode} 
-                handleUndo={handleUndo} handleRedo={handleRedo} undoStack={undoStack} redoStack={redoStack} />
+            <Buttons 
+                handleModeChange={handleModeChange} 
+                handleLoad={handleLoad} 
+                mode={mode} 
+                setElements={setElements}
+                undoStack={undoStack} 
+                redoStack={redoStack}
+                setUndoStack={setUndoStack}
+                setRedoStack={setRedoStack}
+                elements={elements}
+                />
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
