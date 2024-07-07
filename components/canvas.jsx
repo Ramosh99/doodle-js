@@ -30,6 +30,9 @@ const Canvas = () => {
     const [mode, setMode] = useState('rectangle');//active tool
     const canvasRef = useRef(null);
 
+    const [undoStack, setUndoStack] = useState([]);
+    const [redoStack, setRedoStack] = useState([]);
+
     useLayoutEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -40,11 +43,34 @@ const Canvas = () => {
         elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
     }, [elements, pan, zoom]);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault(); // Prevent browser default behavior (like undoing text input)
+                handleUndo();
+            } else if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault(); // Prevent browser default behavior (like redoing text input)
+                handleRedo();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [elements]); // Include elements as a dependency to update listener when elements change
+    
+
     const handleMouseDown = (e) => {
         if (mode === 'grab') {
             setPanning(true);
             return;
         }
+
+        // Save current state to undo stack before starting to draw
+        setUndoStack((prev) => [...prev, elements]);
+        setRedoStack([]); // Clear the redo stack as we're starting a new action
 
         setDrawing(true);
         const { clientX, clientY } = e;
@@ -128,11 +154,28 @@ const Canvas = () => {
     
         reader.readAsText(file);
     };
+
+    const handleUndo = () => {
+        if (undoStack.length  === 0) return;
+        const newElements = undoStack[undoStack.length - 1];
+        setRedoStack((prev) => [...prev, elements]);
+        setUndoStack((prev) => prev.slice(0, prev.length - 1));
+        setElements(newElements);
+    };
+
+    const handleRedo = () => {
+        if (redoStack.length === 0) return;
+        const newElements = redoStack[redoStack.length - 1];
+        setUndoStack((prev) => [...prev, elements]);
+        setRedoStack((prev) => prev.slice(0, prev.length - 1));
+        setElements(newElements);
+    };
     
 
     return (
         <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
-            <Buttons handleModeChange={handleModeChange} handleSave={handleSave} handleLoad={handleLoad} mode={mode}/>
+            <Buttons handleModeChange={handleModeChange} handleSave={handleSave} handleLoad={handleLoad} mode={mode} 
+                handleUndo={handleUndo} handleRedo={handleRedo} undoStack={undoStack} redoStack={redoStack} />
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
