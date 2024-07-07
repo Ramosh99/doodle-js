@@ -6,7 +6,6 @@ import { GoDash } from "react-icons/go";
 import { FiSave } from "react-icons/fi";
 import { LuDownload } from "react-icons/lu";
 import { LuMousePointer2 } from "react-icons/lu";
-import { GrUndo, GrRedo } from "react-icons/gr";
 import Undoredo from './Clicks/Undoredo';
 import { handleSave } from './Clicks/Save'; 
 

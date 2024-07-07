@@ -3,7 +3,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import { ElementType, Rectangle, Line } from '../components/Types/types';
-//import jsPDF from 'jspdf';
+
 
 const generator = rough.generator({
     roughness: 0,
@@ -127,9 +127,7 @@ const Canvas = () => {
         <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
             <Buttons 
                 handleModeChange={handleModeChange} 
-                // handleSave={handleSave} 
                 handleLoad={handleLoad} 
-                // event={event}
                 mode={mode} 
                 setElements={setElements}
                 undoStack={undoStack} 
