@@ -121,16 +121,6 @@ const Canvas = () => {
         setMode(newMode);
     };
 
-    // const handleSave = () => {
-    //     const json = JSON.stringify(elements);
-    //     const blob = new Blob([json], { type: 'application/json' });
-    //     const url = URL.createObjectURL(blob);
-    //     const link = document.createElement('a');
-    //     link.href = url;
-    //     link.download = 'canvas.json';
-    //     link.click();
-    // };
-
     const handleLoad = (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -157,6 +147,7 @@ const Canvas = () => {
                 handleModeChange={handleModeChange} 
                 // handleSave={handleSave} 
                 handleLoad={handleLoad} 
+                // event={event}
                 mode={mode} 
                 setElements={setElements}
                 undoStack={undoStack} 
