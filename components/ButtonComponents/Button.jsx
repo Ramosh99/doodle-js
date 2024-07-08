@@ -25,7 +25,8 @@ const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redo
                 boxShadow:'0 0 3px lightGrey' 
             }}>
                 {/* --- Mouse Pointer ---- */}
-                <LuMousePointer2 className='selectIcon'></LuMousePointer2>
+                <LuMousePointer2  className={mode === 'pointer' ? 'activeIcon' : 'selectIcon'}
+                onClick={() => handleModeChange('pointer')}></LuMousePointer2>
 
                 {/* --- Grab ---- */}
                 <IoHandLeftOutline
