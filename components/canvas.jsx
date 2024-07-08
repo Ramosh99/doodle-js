@@ -51,6 +51,29 @@ const Canvas = () => {
         elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
     }, [elements, pan, zoom]);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'r') {
+                e.preventDefault(); // Prevent browser default behavior (like undoing text input)
+                handleModeChange('rectangle');
+            } else if (e.key === 'l') {
+                e.preventDefault(); 
+                handleModeChange('line');
+            }else if (e.key === 'h') {
+                e.preventDefault(); 
+                handleModeChange('grab');
+            }else if (e.key === 'v') {
+                e.preventDefault(); 
+                handleModeChange('select');
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [elements]); 
 
     const handleMouseDown = (e) => {
         if (mode === 'grab') {
