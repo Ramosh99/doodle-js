@@ -25,7 +25,10 @@ const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redo
                 boxShadow:'0 0 3px lightGrey' 
             }}>
                 {/* --- Mouse Pointer ---- */}
-                <LuMousePointer2 className='selectIcon'></LuMousePointer2>
+                <LuMousePointer2 
+                    className={mode === 'select' ? 'activeIcon' : 'selectIcon'} 
+                    onClick={() => handleModeChange('select')}
+                ></LuMousePointer2>
 
                 {/* --- Grab ---- */}
                 <IoHandLeftOutline
@@ -62,13 +65,14 @@ const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redo
 
                 {/* --- Load ---- */}
                 <LuDownload onClick={handleIconClick} className='selectIcon' ></LuDownload>
+                {/*---This is hidden--------- triggered by above icon */}
+                <input ref={fileInputRef} type="file" style={{display:'none'}} onChange={handleLoad} />
+
             </div>
             
             {/* --- UndoRedo ---- */}
             <Undoredo 
                 elements={elements} 
-                fileInputRef={fileInputRef} 
-                handleLoad={handleLoad} 
                 undoStack={undoStack} 
                 redoStack={redoStack} 
                 setUndoStack={setUndoStack} 

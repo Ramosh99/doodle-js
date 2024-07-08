@@ -4,7 +4,7 @@ import { GrUndo, GrRedo } from "react-icons/gr";
 
 
 
-const Undoredo = ({fileInputRef,handleLoad,elements,undoStack,redoStack,setUndoStack,setRedoStack,setElements}) => {
+const Undoredo = ({elements,undoStack,redoStack,setUndoStack,setRedoStack,setElements}) => {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.ctrlKey && e.key === 'z') {
@@ -47,15 +47,12 @@ const Undoredo = ({fileInputRef,handleLoad,elements,undoStack,redoStack,setUndoS
             width:'100px',height:'30px',backgroundColor:'white',borderRadius:'4px',
             boxShadow:'0 0 3px lightGrey' 
             }}>
-            
-            {/*---This is hidden--------- triggered by above icon */}
-            <input ref={fileInputRef} type="file" style={{display:'none'}} onChange={handleLoad} />
 
             {/* --- Undo ---- */}
-            <GrUndo onClick={handleUndo} style={{ color: undoStack.length === 0 ? 'gray' : 'inherit' }} />
+            <GrUndo onClick={handleUndo} style={{cursor:'pointer' ,color: undoStack.length === 0 ? 'gray' : 'inherit' }} />
 
             {/* --- Redo ---- */}
-            <GrRedo onClick={handleRedo} style={{ color: redoStack.length === 0 ? 'gray' : 'inherit' }} />
+            <GrRedo onClick={handleRedo} style={{cursor:'pointer' ,color: redoStack.length === 0 ? 'gray' : 'inherit' }} />
 
         </div>
     );
