@@ -3,6 +3,8 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import { ElementType, Rectangle, Line } from '../components/Types/types';
+import Selectors from './selctors';
+import { findElement } from './ButtonComponents/Clicks/Transform';
 
 
 const generator = rough.generator({
@@ -25,17 +27,20 @@ const createElement = {
 };
 
 const Canvas = () => {
-    const [elements, setElements] = useState([]);
+    
+    const [elements, setElements] = useState([]);//all elements in canvas
+    const [activeElem,setActiveElem] = useState([])//selected elements
     const [drawing, setDrawing] = useState(false);
     const [panning, setPanning] = useState(false);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [mode, setMode] = useState("grab");//active tool
+    const [mode, setMode] = useState("grab");//active element / current using
     const canvasRef = useRef(null);
 
     const [undoStack, setUndoStack] = useState([]);
     const [redoStack, setRedoStack] = useState([]);
 
+    //Canvas initialization
     useLayoutEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -51,6 +56,10 @@ const Canvas = () => {
         if (mode === 'grab') {
             setPanning(true);
             return;
+        }else if(mode === 'select'){
+            const x = e.nativeEvent.offsetX;
+            const y = e.nativeEvent.offsetY;
+            findElement(setActiveElem,elements,x,y);//imported
         }
 
         // Save current state to undo stack before starting to draw
@@ -64,6 +73,7 @@ const Canvas = () => {
 
         const element = createElement[mode](x, y, x, y);
         setElements((prev) => [...prev, element]);
+
     };
 
     const handleMouseMove = (e) => {
@@ -103,6 +113,8 @@ const Canvas = () => {
         setMode(newMode);
     };
 
+    
+    //File handling------------------------------------------------------------------------------
     const handleLoad = (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -144,8 +156,18 @@ const Canvas = () => {
                 onWheel={handleWheel}
                 width={window.innerWidth}
                 height={window.innerHeight}
-                style={{ cursor: mode === 'grab' ? 'grab' : 'crosshair' }}
+                style={{ cursor: mode === 'grab' ? 'grab' : mode==='select'?'auto':'crosshair' }}
             />
+
+            {/* ---- helper selectors around an active element --------------- */}
+            {activeElem.length>0 && mode==='select'?
+                <Selectors 
+                    x1={activeElem[0].x1} 
+                    x2={activeElem[0].x2} 
+                    y1={activeElem[0].y1} 
+                    y2={activeElem[0].y2}
+                ></Selectors>
+            :''}
         </div>
     );
 };
