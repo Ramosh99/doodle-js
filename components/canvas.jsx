@@ -4,7 +4,7 @@ import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import Selectors from './selctors';
 import { findElement } from './ButtonComponents/Clicks/Transform';
-import { createElement } from './ButtonComponents/Clicks/Shapes';
+import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
 
 
 
@@ -33,29 +33,6 @@ const Canvas = () => {
         elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
     }, [elements, pan, zoom]);
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'r') {
-                e.preventDefault(); // Prevent browser default behavior (like undoing text input)
-                handleModeChange('rectangle');
-            } else if (e.key === 'l') {
-                e.preventDefault(); 
-                handleModeChange('line');
-            }else if (e.key === 'h') {
-                e.preventDefault(); 
-                handleModeChange('grab');
-            }else if (e.key === 'v') {
-                e.preventDefault(); 
-                handleModeChange('select');
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [elements]); 
 
     const handleMouseDown = (e) => {
         if (mode === 'grab') {
@@ -174,6 +151,7 @@ const Canvas = () => {
                     y2={activeElem[0].y2}
                 ></Selectors>
             :''}
+            <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
         </div>
     );
 };
