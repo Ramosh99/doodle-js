@@ -20,3 +20,10 @@
     font-size:20px;
     flex:1;
 }
+
+.selectors{
+    width: 8px;
+    height: 8px;
+    background-color: #09ceff;
+    position: absolute;
+}
