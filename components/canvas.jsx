@@ -53,6 +53,7 @@ const Canvas = () => {
         const x = clientX - pan.x / zoom;
         const y = clientY - pan.y / zoom;
         const element = createElement[mode](x, y, x, y);
+        
         setElements((prev) => [...prev, element]);
   
     };
