@@ -2,30 +2,12 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
-import { ElementType, Rectangle, Line } from '../components/Types/types';
 import Selectors from './selctors';
 import { findElement } from './ButtonComponents/Clicks/Transform';
-import { selectTheShapeMouseDown,selectTheShapeMove,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
+import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
+import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 
 
-const generator = rough.generator({
-  roughness: 0,
-  strokeWidth: 3,
-  stroke: "black",
-  bowing: 0,
-});
-
-
-const createElement = {
-  [ElementType.RECTANGLE]: (x1, y1, x2, y2) => {
-    const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1);
-    return new Rectangle(x1, y1, x2, y2, roughElement);
-  },
-  [ElementType.LINE]: (x1, y1, x2, y2) => {
-    const roughElement = generator.line(x1, y1, x2, y2);
-    return new Line(x1, y1, x2, y2, roughElement);
-  },
-};
 
 const Canvas = () => {
     
@@ -61,31 +43,6 @@ const Canvas = () => {
 
 
 
- 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'r') {
-                e.preventDefault(); // Prevent browser default behavior (like undoing text input)
-                handleModeChange('rectangle');
-            } else if (e.key === 'l') {
-                e.preventDefault(); 
-                handleModeChange('line');
-            }else if (e.key === 'h') {
-                e.preventDefault(); 
-                handleModeChange('grab');
-            }else if (e.key === 'v') {
-                e.preventDefault(); 
-                handleModeChange('select');
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [elements]); 
-
     const handleMouseDown = (e) => {
         if (mode === 'grab') {
             setPanning(true);
@@ -105,10 +62,10 @@ const Canvas = () => {
         const { clientX, clientY } = e;
         const x = clientX - pan.x / zoom;
         const y = clientY - pan.y / zoom;
-
         const element = createElement[mode](x, y, x, y);
+        
         setElements((prev) => [...prev, element]);
-
+  
     };
 
     const handleMouseMove = (e) => {
@@ -132,6 +89,7 @@ const Canvas = () => {
         const index = elements.length - 1;
         const { x1, y1 } = elements[index];
         const updatedElement = createElement[mode](x1, y1, x, y);
+        if (updatedElement === null) return;
         const elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
         setElements(elementsCopy);
@@ -147,11 +105,12 @@ const Canvas = () => {
           
     };
 
-    const handleWheel = (e) => {
-        const zoomFactor = 1.1;
-        const newZoom = e.deltaY < 0 ? zoom * zoomFactor : zoom / zoomFactor;
-        setZoom(newZoom);
-    };
+    //------------------------------------------------zooming option--------------------------------
+    // const handleWheel = (e) => {
+    //     const zoomFactor = 1.1;
+    //     const newZoom = e.deltaY < 0 ? zoom * zoomFactor : zoom / zoomFactor;
+    //     setZoom(newZoom);
+    // };
 
     const handleModeChange = (newMode) => {
         setMode(newMode);
@@ -199,7 +158,7 @@ const Canvas = () => {
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
-                onWheel={handleWheel}
+                // onWheel={handleWheel}
                 width={window.innerWidth}
                 height={window.innerHeight}
                 style={{ cursor: mode === 'grab' ? 'grab' : mode==='select'?'auto':'crosshair' }}
@@ -210,6 +169,7 @@ const Canvas = () => {
                 <Selectors mode={mode} activeElem={activeElem}
                 ></Selectors>
             :''}
+            <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
         </div>
     );
   }
