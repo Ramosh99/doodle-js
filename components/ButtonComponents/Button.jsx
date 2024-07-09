@@ -9,7 +9,7 @@ import { LuMousePointer2 } from "react-icons/lu";
 import Undoredo from './Clicks/Undoredo';
 import { handleSave } from './Clicks/Save'; 
 
-const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements }) => {
+const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
     const fileInputRef = useRef(null); // ref to file chooser
 
     const handleIconClick = () => { // function to trigger file chooser by LuDownload icon
@@ -78,6 +78,7 @@ const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redo
                 setUndoStack={setUndoStack} 
                 setRedoStack={setRedoStack} 
                 setElements={setElements}
+                setActiveElem={setActiveElem}
             />
         </>
     );

@@ -4,7 +4,7 @@ import { GrUndo, GrRedo } from "react-icons/gr";
 
 
 
-const Undoredo = ({elements,undoStack,redoStack,setUndoStack,setRedoStack,setElements}) => {
+const Undoredo = ({elements,undoStack,redoStack,setUndoStack,setRedoStack,setElements,setActiveElem}) => {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.ctrlKey && e.key === 'z') {
@@ -26,6 +26,7 @@ const Undoredo = ({elements,undoStack,redoStack,setUndoStack,setRedoStack,setEle
     
     const handleUndo = () => {
         if (undoStack.length  === 0) return;
+        setActiveElem([]);
         const newElements = undoStack[undoStack.length - 1];
         setRedoStack((prev) => [...prev, elements]);
         setUndoStack((prev) => prev.slice(0, prev.length - 1));
