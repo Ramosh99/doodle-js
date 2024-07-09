@@ -5,25 +5,26 @@ import Buttons from './ButtonComponents/Button';
 import { ElementType, Rectangle, Line } from '../components/Types/types';
 import Selectors from './selctors';
 import { findElement } from './ButtonComponents/Clicks/Transform';
+import { selectTheShapeMouseDown,selectTheShapeMove,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 
 
 const generator = rough.generator({
-    roughness: 0,
-    strokeWidth: 3,
-    stroke: 'black',
-    bowing: 0,
+  roughness: 0,
+  strokeWidth: 3,
+  stroke: "black",
+  bowing: 0,
 });
 
-const createElement = {
-    [ElementType.RECTANGLE]: (x1, y1, x2, y2) => {
-        const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1);
-        return new Rectangle(x1, y1, x2, y2, roughElement);
-    },
-    [ElementType.LINE]: (x1, y1, x2, y2) => {
-        const roughElement = generator.line(x1, y1, x2, y2);
-        return new Line(x1, y1, x2, y2, roughElement);
-    }
 
+const createElement = {
+  [ElementType.RECTANGLE]: (x1, y1, x2, y2) => {
+    const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1);
+    return new Rectangle(x1, y1, x2, y2, roughElement);
+  },
+  [ElementType.LINE]: (x1, y1, x2, y2) => {
+    const roughElement = generator.line(x1, y1, x2, y2);
+    return new Line(x1, y1, x2, y2, roughElement);
+  },
 };
 
 const Canvas = () => {
@@ -37,8 +38,16 @@ const Canvas = () => {
     const [mode, setMode] = useState("grab");//active element / current using
     const canvasRef = useRef(null);
 
-    const [undoStack, setUndoStack] = useState([]);
-    const [redoStack, setRedoStack] = useState([]);
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+  
+  //----selection and move
+  const [starx,setStarx]=useState(null);
+  const [stary,setStary]=useState(null);
+  const [currentSelectedIndex,setCurrentSelectedIndex]=useState(null);
+  const [isDragging,setIsDragging]=useState(false);
+
+  //---------------------------------
 
     //Canvas initialization
     useLayoutEffect(() => {
@@ -46,11 +55,13 @@ const Canvas = () => {
         const ctx = canvas.getContext('2d');
         ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
         ctx.clearRect(-pan.x, -pan.y, canvas.width / zoom, canvas.height / zoom);
-
         const roughCanvas = rough.canvas(canvas);
         elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
-    }, [elements, pan, zoom]);
+      }, [elements, pan, zoom]);
 
+
+
+ 
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'r') {
@@ -82,7 +93,8 @@ const Canvas = () => {
         }else if(mode === 'select'){
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
-            findElement(setActiveElem,elements,x,y);//imported
+            selectTheShapeMouseDown(parseInt(e.clientX), parseInt(e.clientY),setStarx,setStary,setIsDragging,setCurrentSelectedIndex,setActiveElem,elements);
+            return;
         }
 
         // Save current state to undo stack before starting to draw
@@ -107,6 +119,10 @@ const Canvas = () => {
             }));
             return;
         }
+        if (mode == "select") {
+          selectTheShapeMove(parseInt(e.clientX), parseInt(e.clientY),isDragging,starx,stary,currentSelectedIndex,elements,setActiveElem,setElements,setStarx,setStary,setUndoStack,setRedoStack);
+          return;
+        }
 
         if (!drawing) return;
 
@@ -124,6 +140,11 @@ const Canvas = () => {
     const handleMouseUp = () => {
         setDrawing(false);
         setPanning(false);
+        if (mode === "select") {
+          selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements);
+        }
+       
+          
     };
 
     const handleWheel = (e) => {
@@ -158,6 +179,7 @@ const Canvas = () => {
         reader.readAsText(file);
     };    
 
+    // Check if the point is close enough to the line segment within the tolerance
     return (
         <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
             <Buttons 
@@ -170,6 +192,7 @@ const Canvas = () => {
                 setUndoStack={setUndoStack}
                 setRedoStack={setRedoStack}
                 elements={elements}
+                setActiveElem={setActiveElem}
                 />
             <canvas
                 ref={canvasRef}
@@ -184,15 +207,22 @@ const Canvas = () => {
 
             {/* ---- helper selectors around an active element --------------- */}
             {activeElem.length>0 && mode==='select'?
-                <Selectors 
-                    x1={activeElem[0].x1} 
-                    x2={activeElem[0].x2} 
-                    y1={activeElem[0].y1} 
-                    y2={activeElem[0].y2}
+                <Selectors mode={mode} activeElem={activeElem}
                 ></Selectors>
             :''}
         </div>
     );
-};
+  }
+
+  
+
+ 
+
+ 
+ 
+
+ 
+
+
 
 export default Canvas;
