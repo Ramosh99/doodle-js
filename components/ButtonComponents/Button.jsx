@@ -1,15 +1,15 @@
 // Buttons.js
 import React, { useRef } from 'react';
 import { IoHandLeftOutline } from "react-icons/io5";
-import { RiRectangleLine } from "react-icons/ri";
-import { GoDash } from "react-icons/go";
+import { RiCircleLine, RiRectangleLine, RiTriangleLine } from "react-icons/ri";
+import { GoCircle, GoDash } from "react-icons/go";
 import { FiSave } from "react-icons/fi";
 import { LuDownload } from "react-icons/lu";
 import { LuMousePointer2 } from "react-icons/lu";
 import Undoredo from './Clicks/Undoredo';
 import { handleSave } from './Clicks/Save'; 
 
-const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
+const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
     const fileInputRef = useRef(null); // ref to file chooser
 
     const handleIconClick = () => { // function to trigger file chooser by LuDownload icon
@@ -54,10 +54,24 @@ const Buttons = ({ handleModeChange, elements, handleLoad, mode, undoStack, redo
                     Line
                 </GoDash>
 
+                {/* --- Circle --- */}
+                <RiCircleLine
+                    className={mode === 'circle' ? 'activeIcon' : 'selectIcon'}
+                    onClick={() => handleModeChange('circle')}
+                >
+                </RiCircleLine>
+                
+                {/* --- Triangle --- */}
+                <RiTriangleLine 
+                    className={mode === 'triangle' ? 'activeIcon' : 'selectIcon'} 
+                    onClick={() => handleModeChange('triangle')}
+                >
+                </RiTriangleLine>
+
                 {/* --- Save ---- */}
                 <FiSave 
                     className='selectIcon'
-                    onClick={() => handleSave(elements)}
+                    onClick={() => handleSave({elements})}
                     style={{marginLeft:'100px'}}
                 >
                     Save

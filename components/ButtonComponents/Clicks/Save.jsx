@@ -1,4 +1,7 @@
-export const handleSave = (elements) => {
+export const handleSave = ({elements}) => {
+
+
+
     const json = JSON.stringify(elements);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -6,8 +9,10 @@ export const handleSave = (elements) => {
     link.href = url;
     link.download = 'canvas.json';
     link.click();
-};
+ 
+    
 
+};
 const Save = () => {
     return null;
 };
