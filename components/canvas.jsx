@@ -51,6 +51,8 @@ const Canvas = () => {
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
             selectTheShapeMouseDown(parseInt(e.clientX), parseInt(e.clientY),setStarx,setStary,setIsDragging,setCurrentSelectedIndex,setActiveElem,elements);
+            setUndoStack((prev) => [...prev, elements]);
+            setRedoStack([]);
             return;
         }
 

@@ -122,8 +122,6 @@ import rough from 'roughjs/bundled/rough.esm';
       return;
     }
    
-    
-    setUndoStack((prev) => [...prev, elements]);
     // Create a copy of the elements array
     const newElements = [...elements];
 
@@ -168,7 +166,7 @@ import rough from 'roughjs/bundled/rough.esm';
     }
   };
 
-export  function selectTheShapeMove(mouseX, mouseY,isDragging,starx,stary,currentSelectedIndex,elements,setActiveElem,setElements,setStarx,setStary,setUndoStack,setRedoStack) {
+export  function selectTheShapeMove(mouseX, mouseY,isDragging,starx,stary,currentSelectedIndex,elements,setActiveElem,setElements,setStarx,setStary) {
     if (!isDragging) {
       return;
     } else if (isDragging) {
@@ -188,9 +186,7 @@ export  function selectTheShapeMove(mouseX, mouseY,isDragging,starx,stary,curren
         newy2,
         elements,
         setActiveElem,
-        setElements,
-        setUndoStack,
-        setRedoStack
+        setElements
       );
 
       setStarx(mouseX);
@@ -198,7 +194,7 @@ export  function selectTheShapeMove(mouseX, mouseY,isDragging,starx,stary,curren
 
     }
   }
- export function selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements) {
+ export function selectTheShapeMouseUp(isDragging,setIsDragging) {
     if (!isDragging) {
       return;
     }
