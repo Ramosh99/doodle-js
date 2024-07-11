@@ -6,6 +6,7 @@ import Selectors from './selctors';
 import { findElement } from './ButtonComponents/Clicks/Transform';
 import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
+import Color from './ButtonComponents/Color';
 
 
 
@@ -197,6 +198,7 @@ const Canvas = () => {
                 elements={elements}
                 setActiveElem={setActiveElem}
                 />
+            <Color></Color>
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}

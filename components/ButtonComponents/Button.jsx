@@ -1,5 +1,5 @@
 // Buttons.js
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { IoHandLeftOutline } from "react-icons/io5";
 import { RiCircleLine, RiRectangleLine, RiTriangleLine } from "react-icons/ri";
 import { GoCircle, GoDash } from "react-icons/go";
@@ -8,10 +8,22 @@ import { LuDownload } from "react-icons/lu";
 import { LuMousePointer2 } from "react-icons/lu";
 import Undoredo from './Clicks/Undoredo';
 import { handleSave } from './Clicks/Save'; 
+import { FaAngleDown } from "react-icons/fa";
 
 const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
-    const fileInputRef = useRef(null); // ref to file chooser
 
+    //shape selector options-----------------------------------------------------------------------
+    const [shapeMenu,setShapeMenu] = useState(false); // to show/hide shape menu
+    const [activeShape, setActiveShape] = useState('rectangle'); 
+    const handleActiveShape = (shape) => { 
+        setActiveShape(shape);
+        handleModeChange(shape)
+        setShapeMenu(false);
+    }
+
+
+    //file handling options-------------------------------------------------------------------------
+    const fileInputRef = useRef(null); // ref to file chooser
     const handleIconClick = () => { // function to trigger file chooser by LuDownload icon
         fileInputRef.current.click();
     };
@@ -21,8 +33,8 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
             <div style={{ 
                 position: 'absolute', top:'10px', left:'20px',
                 display:'flex', justifyContent:'space-around', alignItems:'center',
-                width:'600px', height:'30px', backgroundColor:'white', borderRadius:'4px',
-                boxShadow:'0 0 3px lightGrey' 
+                width:'400px', height:'30px', backgroundColor:'white', borderRadius:'4px',
+                boxShadow:'0 0 3px lightGrey',
             }}>
                 {/* --- Mouse Pointer ---- */}
                 <LuMousePointer2 
@@ -38,13 +50,51 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                     Grab
                 </IoHandLeftOutline>
 
-                {/* --- Rectangle ---- */}
-                <RiRectangleLine 
-                    className={mode === 'rectangle' ? 'activeIcon' : 'selectIcon'} 
-                    onClick={() => handleModeChange('rectangle')}
-                >
-                    Rectangle
-                </RiRectangleLine>
+
+                {/* =========   Shape selector ==================================== */}
+                <div>
+                    {/*---active shape with drop arrow--------------- */}
+                   <div style={{display:'flex',justifyContent:'center',alignItems:'center'}}>
+                    {activeShape==='rectangle'?                   
+                        <RiRectangleLine 
+                            className={mode === 'rectangle' ? 'activeIcon' : 'selectIcon'} 
+                            onClick={() => handleModeChange('rectangle')}
+                         >
+                        </RiRectangleLine> 
+                        :activeShape==='circle'?
+                        <RiCircleLine
+                            className={mode === 'circle' ? 'activeIcon' : 'selectIcon'}
+                            onClick={() => handleModeChange('circle')}
+                        >
+                        </RiCircleLine>
+                        :activeShape==='triangle'?
+                        <RiTriangleLine 
+                            className={mode === 'triangle' ? 'activeIcon' : 'selectIcon'} 
+                            onClick={() => handleModeChange('triangle')}
+                        >
+                        </RiTriangleLine>
+                        :''}
+                     <FaAngleDown style={{fontSize:'10px',cursor:'pointer'}} onClick={()=>setShapeMenu(!shapeMenu)}></FaAngleDown>  
+                   </div>  
+
+                    {/*----- drop down menu---------------------- */}
+                    {shapeMenu?<div 
+                    className='drop'
+                    style={{
+                        display:'flex',flexDirection:'column',justifyContent:'space-around',alignItems:'center',position:'absolute',top:'25px',
+                        backgroundColor:'white',
+                        borderRadius:'4px',borderTopLeftRadius:'0',borderTopRightRadius:'0',
+                        borderTop:'1px solid lightGrey',
+                        boxShadow:'0px 2px 3px lightGrey',
+                        padding:'5px'
+                        }}>
+                    {activeShape!=='rectangle'?<RiRectangleLine className='selectIconMenu' onClick={()=>handleActiveShape('rectangle')}></RiRectangleLine>:''}
+                    {activeShape!=='circle'?<RiCircleLine className='selectIconMenu' onClick={()=>handleActiveShape('circle')}></RiCircleLine>:''}
+                    {activeShape!=='triangle'?<RiTriangleLine className='selectIconMenu' onClick={()=>handleActiveShape('triangle')}></RiTriangleLine>:''}
+                </div>
+                :''}             
+                </div>
+
 
                 {/* --- Line ---- */}
                 <GoDash 
@@ -53,20 +103,6 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                 >
                     Line
                 </GoDash>
-
-                {/* --- Circle --- */}
-                <RiCircleLine
-                    className={mode === 'circle' ? 'activeIcon' : 'selectIcon'}
-                    onClick={() => handleModeChange('circle')}
-                >
-                </RiCircleLine>
-                
-                {/* --- Triangle --- */}
-                <RiTriangleLine 
-                    className={mode === 'triangle' ? 'activeIcon' : 'selectIcon'} 
-                    onClick={() => handleModeChange('triangle')}
-                >
-                </RiTriangleLine>
 
                 {/* --- Save ---- */}
                 <FiSave 
