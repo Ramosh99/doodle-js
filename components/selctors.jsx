@@ -36,8 +36,8 @@ export default function Selectors({
     return () => {
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [setIsResizing]);
-
+  }, [setIsResizing, setIsDragging, setResizingPoint]);
+//-------------------------yasiru changed aboove code with setisdragging and setresizing pooint-----------------------
   if (type === "rectangle") {
     return (
       <div>

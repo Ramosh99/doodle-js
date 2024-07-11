@@ -69,9 +69,9 @@ export default function Color() {
                 display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',paddingTop:'10px',paddingBottom:'10px',marginRight:'10px'
             }}>
             {
-                colorPallete.map((col)=>{
-                    return <ColorSpot col={col} mode={mode} handleActiveColor={handleActiveColor}></ColorSpot>
-                })
+                colorPallete.map((col, index) => (
+                    <ColorSpot key={index} col={col} mode={mode} handleActiveColor={handleActiveColor}></ColorSpot>
+                ))
             }
         </div>
 

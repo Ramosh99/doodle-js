@@ -67,8 +67,6 @@ const Canvas = () => {
             setPanning(true);
             return;
         }else if(mode === 'select'){
-            const x = e.nativeEvent.offsetX;
-            const y = e.nativeEvent.offsetY;
             selectTheShapeMouseDown(
               parseInt(e.clientX), 
               parseInt(e.clientY),
@@ -76,7 +74,13 @@ const Canvas = () => {
               setStary,
               setIsDragging,
               setCurrentSelectedIndex,
-              setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
+              setActiveElem,
+              elements,
+              currentSelectedIndex,
+              resizingPoint,
+              isResizing,
+              setIsResizing
+            );
             return;
         }
 
@@ -145,7 +149,6 @@ const Canvas = () => {
         if (mode === "select") {
           selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements,isResizing,setIsResizing);
         }
-               
     };
 
     //------------------------------------------------zooming option--------------------------------
@@ -212,8 +215,7 @@ const Canvas = () => {
 
             {/* ---- helper selectors around an active element --------------- */}
             {activeElem.length>0 && mode==='select'?
-                <Selectors isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}
-                ></Selectors>
+                <Selectors isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}></Selectors>
             :''}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
         </div>
