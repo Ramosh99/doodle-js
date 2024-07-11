@@ -1,1 +1,1 @@
-1. when swiped with two fingers
+1. after canvas is moved bounding box is not updated
