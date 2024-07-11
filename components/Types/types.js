@@ -1,7 +1,12 @@
 export const ElementType = {
     RECTANGLE: 'rectangle',
     LINE: 'line',
-};
+    CIRCLE: 'circle',
+    TRIANGLE: 'triangle',
+    SQUARE: 'square',
+  };
+  
+  
 
 export class Rectangle {
     constructor(x1, y1, x2, y2, roughElement) {

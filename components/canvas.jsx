@@ -52,7 +52,14 @@ const Canvas = () => {
         }else if(mode === 'select'){
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
-            selectTheShapeMouseDown(parseInt(e.clientX), parseInt(e.clientY),setStarx,setStary,setIsDragging,setCurrentSelectedIndex,setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
+            selectTheShapeMouseDown(
+              parseInt(e.clientX), 
+              parseInt(e.clientY),
+              setStarx,
+              setStary,
+              setIsDragging,
+              setCurrentSelectedIndex,
+              setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
             return;
         }
 
@@ -72,19 +79,36 @@ const Canvas = () => {
 
     const handleMouseMove = (e) => {
         if (panning) {
-            setPan((prevPan) => ({
-                x: prevPan.x + e.movementX,
-                y: prevPan.y + e.movementY,
-            }));
-            return;
-        }
-        if (mode == "select") {
-          selectTheShapeMove(parseInt(e.clientX), parseInt(e.clientY),isDragging,starx,stary,currentSelectedIndex,elements,setActiveElem,setElements,setStarx,setStary,setUndoStack,setRedoStack,resizingPoint,isResizing,setIsResizing);
+          setPan((prevPan) => ({
+            x: prevPan.x + e.movementX,
+            y: prevPan.y + e.movementY,
+          }));
           return;
         }
-
+        if (mode === 'select') {
+          selectTheShapeMove(
+            parseInt(e.clientX),
+            parseInt(e.clientY),
+            isDragging,
+            starx,
+            stary,
+            currentSelectedIndex,
+            elements,
+            setActiveElem,
+            setElements,
+            setStarx,
+            setStary,
+            setUndoStack,
+            setRedoStack,
+            resizingPoint,
+            isResizing,
+            setIsResizing
+          );
+          return;
+        }
+      
         if (!drawing) return;
-
+      
         const { clientX, clientY } = e;
         const x = clientX - pan.x / zoom;
         const y = clientY - pan.y / zoom;
@@ -95,7 +119,8 @@ const Canvas = () => {
         const elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
         setElements(elementsCopy);
-    };
+      };
+      
 
     const handleMouseUp = () => {
         setDrawing(false);
@@ -137,7 +162,8 @@ const Canvas = () => {
         };
     
         reader.readAsText(file);
-    };    
+    }; 
+  
 
     // Check if the point is close enough to the line segment within the tolerance
     return (
@@ -146,6 +172,7 @@ const Canvas = () => {
                 handleModeChange={handleModeChange} 
                 handleLoad={handleLoad} 
                 mode={mode} 
+                canvasRef={canvasRef}
                 setElements={setElements}
                 undoStack={undoStack} 
                 redoStack={redoStack}
