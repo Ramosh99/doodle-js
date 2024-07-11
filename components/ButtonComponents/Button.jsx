@@ -33,7 +33,7 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
             <div style={{ 
                 position: 'absolute', top:'10px', left:'20px',
                 display:'flex', justifyContent:'space-around', alignItems:'center',
-                width:'600px', height:'30px', backgroundColor:'white', borderRadius:'4px',
+                width:'400px', height:'30px', backgroundColor:'white', borderRadius:'4px',
                 boxShadow:'0 0 3px lightGrey',
             }}>
                 {/* --- Mouse Pointer ---- */}

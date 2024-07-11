@@ -5,20 +5,17 @@
 .selectIcon{
     cursor: pointer;
     font-size:20px;
-    flex:1;
 }
 
 .selectIcon:hover{
     color: blue;
     font-size:20px;
-    flex:1;
 }
 
 .activeIcon{
     cursor: pointer;
     color: blue;
     font-size:20px;
-    flex:1;
 }
 
 .selectors{
