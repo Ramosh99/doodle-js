@@ -11,20 +11,14 @@ export default function Selectors({
   setIsResizing,
   setIsDragging,
 }) {
-  if (!activeElem.length || mode !== "select") {
-    return null;
-  }
-
-  const { type, x1, x2, y1, y2 } = activeElem[0];
-
   const handleCornerClick = (corner) => {
-    //identify resizing points
+    // identify resizing points
     setResizingPoint(corner);
     setIsResizing(true);
     setIsDragging(false);
   };
 
-  useEffect(() => { //for stopping resizing, when releasing the mouse pointer
+  useEffect(() => {
     const handleMouseUp = () => {
       setIsResizing(false);
       setIsDragging(false);
@@ -37,7 +31,13 @@ export default function Selectors({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [setIsResizing, setIsDragging, setResizingPoint]);
-//-------------------------yasiru changed aboove code with setisdragging and setresizing pooint-----------------------
+
+  if (!activeElem.length || mode !== "select") {
+    return null;
+  }
+
+  const { type, x1, x2, y1, y2 } = activeElem[0];
+
   if (type === "rectangle") {
     return (
       <div>
