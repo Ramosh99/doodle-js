@@ -52,7 +52,14 @@ const Canvas = () => {
         }else if(mode === 'select'){
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
-            selectTheShapeMouseDown(parseInt(e.clientX), parseInt(e.clientY),setStarx,setStary,setIsDragging,setCurrentSelectedIndex,setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
+            selectTheShapeMouseDown(
+              parseInt(e.clientX), 
+              parseInt(e.clientY),
+              setStarx,
+              setStary,
+              setIsDragging,
+              setCurrentSelectedIndex,
+              setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
             return;
         }
 
@@ -92,7 +99,10 @@ const Canvas = () => {
             setStarx,
             setStary,
             setUndoStack,
-            setRedoStack
+            setRedoStack,
+            resizingPoint,
+            isResizing,
+            setIsResizing
           );
           return;
         }
