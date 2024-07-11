@@ -28,6 +28,8 @@ const Canvas = () => {
   const [stary,setStary]=useState(null);
   const [currentSelectedIndex,setCurrentSelectedIndex]=useState(null);
   const [isDragging,setIsDragging]=useState(false);
+  const [isResizing,setIsResizing]=useState(false); 
+  const [resizingPoint,setResizingPoint]=useState("");  //for identify the clicked point of resizing shape
 
   //---------------------------------
 
@@ -50,7 +52,7 @@ const Canvas = () => {
         }else if(mode === 'select'){
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
-            selectTheShapeMouseDown(parseInt(e.clientX), parseInt(e.clientY),setStarx,setStary,setIsDragging,setCurrentSelectedIndex,setActiveElem,elements);
+            selectTheShapeMouseDown(parseInt(e.clientX), parseInt(e.clientY),setStarx,setStary,setIsDragging,setCurrentSelectedIndex,setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
             return;
         }
 
@@ -114,10 +116,9 @@ const Canvas = () => {
         setDrawing(false);
         setPanning(false);
         if (mode === "select") {
-          selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements);
+          selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements,isResizing,setIsResizing);
         }
-       
-          
+               
     };
 
     //------------------------------------------------zooming option--------------------------------
@@ -183,7 +184,7 @@ const Canvas = () => {
 
             {/* ---- helper selectors around an active element --------------- */}
             {activeElem.length>0 && mode==='select'?
-                <Selectors mode={mode} activeElem={activeElem}
+                <Selectors isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}
                 ></Selectors>
             :''}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>

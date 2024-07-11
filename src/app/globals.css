@@ -26,4 +26,40 @@
     height: 8px;
     background-color: #09ceff;
     position: absolute;
+    
 }
+
+.scale-cursorTL {
+    cursor: nw-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+  .scale-cursor{
+    cursor: nw-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+  .scale-cursorTM{
+    cursor: n-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+  .scale-cursorTR{
+    cursor: ne-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+  .scale-cursorBL{
+    cursor: nesw-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+
+  .scale-cursorBM{
+    cursor: ns-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+
+  .scale-cursorBR{
+    cursor: nwse-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+  .scale-cursorLM{
+    cursor: ew-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+  .scale-cursorRM{
+    cursor: ew-resize; /* This can be changed to other values like nesw-resize, ew-resize, etc. */
+  }
+  .scaleline
+  {
+    cursor:pointer;
+
+  }
