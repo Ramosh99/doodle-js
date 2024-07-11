@@ -35,17 +35,7 @@ const createElement = {
       });
       return { type: ElementType.TRIANGLE, x1, y1, x2, y2, roughElement };
     },
-    [ElementType.SQUARE]: (x1, y1, x2, y2) => {
-      const size = Math.min(Math.abs(x2 - x1), Math.abs(y2 - y1));
-      const roughElement = generator.rectangle(x1, y1, size, size, {
-        stroke: '#000000',
-        strokeWidth: 2,
-        roughness: 2,
-        bowing: 2, // Adjust the bowing for rounded corners
-        fill: 'none',
-      });
-      return { type: ElementType.SQUARE, x1, y1, x2, y2, roughElement };
-    },
+
   };
   
   
