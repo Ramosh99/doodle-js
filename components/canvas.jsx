@@ -63,27 +63,6 @@ const Canvas = () => {
 
 
     const handleMouseDown = (e) => {
-        if (mode === 'grab') {
-            setPanning(true);
-            return;
-        }else if(mode === 'select'){
-            selectTheShapeMouseDown(
-              parseInt(e.clientX), 
-              parseInt(e.clientY),
-              setStarx,
-              setStary,
-              setIsDragging,
-              setCurrentSelectedIndex,
-              setActiveElem,
-              elements,
-              currentSelectedIndex,
-              resizingPoint,
-              isResizing,
-              setIsResizing
-            );
-            return;
-        }
-
         // Save current state to undo stack before starting to draw
         setUndoStack((prev) => [...prev, elements]);
         setRedoStack([]); // Clear the redo stack as we're starting a new action
@@ -92,13 +71,38 @@ const Canvas = () => {
         const { clientX, clientY } = e;
         const x = clientX - pan.x / zoom;
         const y = clientY - pan.y / zoom;
-        const element = createElement[mode](x, y, x, y);
-        
-        setElements((prev) => [...prev, element]);
+
+        if (mode === 'grab') {
+          setPanning(true);
+          return;
+        }else if(mode === 'select'){
+          selectTheShapeMouseDown(
+            parseInt(x), 
+            parseInt(y),
+            setStarx,
+            setStary,
+            setIsDragging,
+            setCurrentSelectedIndex,
+            setActiveElem,
+            elements,
+            currentSelectedIndex,
+            resizingPoint,
+            isResizing,
+            setIsResizing
+          );
+          return;
+      }
+      const element = createElement[mode](x, y, x, y);
+      setElements((prev) => [...prev, element]);
   
     };
 
     const handleMouseMove = (e) => {
+      
+      const { clientX, clientY } = e;
+      const x = clientX - pan.x / zoom;
+      const y = clientY - pan.y / zoom;
+
         if (panning) {
           setPan((prevPan) => ({
             x: prevPan.x + e.movementX,
@@ -108,8 +112,8 @@ const Canvas = () => {
         }
         if (mode === 'select') {
           selectTheShapeMove(
-            parseInt(e.clientX),
-            parseInt(e.clientY),
+            parseInt(x),
+            parseInt(y),
             isDragging,
             starx,
             stary,
@@ -127,16 +131,16 @@ const Canvas = () => {
           );
           return;
         }
-      
         if (!drawing) return;
-      
-        const { clientX, clientY } = e;
-        const x = clientX - pan.x / zoom;
-        const y = clientY - pan.y / zoom;
+        
+
+
         const index = elements.length - 1;
         const { x1, y1 } = elements[index];
         const updatedElement = createElement[mode](x1, y1, x, y);
+
         if (updatedElement === null) return;
+
         const elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
         setElements(elementsCopy);
@@ -147,7 +151,14 @@ const Canvas = () => {
         setDrawing(false);
         setPanning(false);
         if (mode === "select") {
-          selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements,isResizing,setIsResizing);
+          selectTheShapeMouseUp(
+            isDragging,
+            setIsDragging,
+            setUndoStack,
+            elements,
+            isResizing,
+            setIsResizing
+          );
         }
     };
 
@@ -215,7 +226,7 @@ const Canvas = () => {
 
             {/* ---- helper selectors around an active element --------------- */}
             {activeElem.length>0 && mode==='select'?
-                <Selectors isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}></Selectors>
+                <Selectors pan={pan} zoom={zoom} isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}></Selectors>
             :''}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
         </div>
