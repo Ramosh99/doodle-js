@@ -7,6 +7,7 @@ import { findElement } from './ButtonComponents/Clicks/Transform';
 import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
+import Delete from './ButtonComponents/Clicks/Delete';
 
 
 
@@ -86,7 +87,8 @@ const Canvas = () => {
               setCurrentSelectedIndex,
 
               setActiveElem,activeElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing,activeColor,activeStrokeColor);
-
+              setUndoStack((prev) => [...prev, elements]);
+              setRedoStack([]);
           return;
         }
 
@@ -229,6 +231,16 @@ const Canvas = () => {
                 ></Selectors>
             :''}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
+
+            <Delete 
+                elements={elements}
+                setElements={setElements}
+                activeElem={activeElem}undoStack
+                setUndoStack={setUndoStack}
+                setRedoStack={setRedoStack}
+                setActiveElem={setActiveElem}
+
+            />
         </div>
     );
   }
