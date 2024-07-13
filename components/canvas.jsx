@@ -61,6 +61,10 @@ const Canvas = () => {
               setIsDragging,
               setCurrentSelectedIndex,
               setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
+
+              setUndoStack((prev) => [...prev, elements]);
+              setRedoStack([]);
+              
             return;
         }
 
