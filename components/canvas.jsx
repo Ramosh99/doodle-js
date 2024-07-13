@@ -84,8 +84,10 @@ const Canvas = () => {
               setStary,
               setIsDragging,
               setCurrentSelectedIndex,
+
               setActiveElem,activeElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing,activeColor,activeStrokeColor);
-            return;
+
+          return;
         }
 
         // Save current state to undo stack before starting to draw
