@@ -5,32 +5,35 @@ import { useEffect } from 'react';
 const generator = rough.generator();
 
 const createElement = {
-    [ElementType.RECTANGLE]: (x1, y1, x2, y2) => {
+    [ElementType.RECTANGLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1, {
-        stroke: '#000000',
+        fill:fillcolor,
+        stroke: strokecolor,
         strokeWidth: 2,
         roughness: 2,
       });
       return new Rectangle(x1, y1, x2, y2, roughElement);
     },
-    [ElementType.LINE]: (x1, y1, x2, y2) => {
+    [ElementType.LINE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const roughElement = generator.line(x1, y1, x2, y2, {
-        stroke: '#000000',
+        stroke: strokecolor,
         strokeWidth: 2,
       });
       return new Line(x1, y1, x2, y2, roughElement);
     },
-    [ElementType.CIRCLE]: (x1, y1, x2, y2) => {
+    [ElementType.CIRCLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const radius = Math.hypot(x2 - x1, y2 - y1);
       const roughElement = generator.circle(x1, y1, radius * 2, {
-        stroke: '#000000',
+        fill:fillcolor,
+        stroke: strokecolor,
         strokeWidth: 2,
       });
       return { type: ElementType.CIRCLE, x1, y1, x2, y2, roughElement };
     },
-    [ElementType.TRIANGLE]: (x1, y1, x2, y2) => {
+    [ElementType.TRIANGLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const roughElement = generator.polygon([[x1, y1], [x2, y2], [(2*x1)-x2, y2], [x1, y1]], {
-        stroke: '#000000',
+        fill:fillcolor,
+        stroke: strokecolor,
         strokeWidth: 2,
       });
       return { type: ElementType.TRIANGLE, x1, y1, x2, y2, roughElement };

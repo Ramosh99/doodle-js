@@ -34,6 +34,30 @@ const Canvas = () => {
 
   //---------------------------------
 
+  //------color initilization--------------
+  const [activeColor, setActiveColor] = useState('');
+  const [activeStrokeColor,setActiveStrokeColor]=useState('black');
+  
+  //--------------------------------
+
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    // Update the dimensions state with the window dimensions
+    setDimensions({ width: window.innerWidth, height: window.innerHeight });
+
+    // Optional: Handle window resize
+    const handleResize = () => {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup function to remove the event listener
+    return () => window.removeEventListener('resize', handleResize);
+  }, []); // Empty dependency array means this effect runs once on mount
+
+
     //Canvas initialization
     useLayoutEffect(() => {
         const canvas = canvasRef.current;
@@ -60,12 +84,10 @@ const Canvas = () => {
               setStary,
               setIsDragging,
               setCurrentSelectedIndex,
-              setActiveElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing);
 
-              setUndoStack((prev) => [...prev, elements]);
-              setRedoStack([]);
-              
-            return;
+              setActiveElem,activeElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing,activeColor,activeStrokeColor);
+
+          return;
         }
 
         // Save current state to undo stack before starting to draw
@@ -76,7 +98,7 @@ const Canvas = () => {
         const { clientX, clientY } = e;
         const x = clientX - pan.x / zoom;
         const y = clientY - pan.y / zoom;
-        const element = createElement[mode](x, y, x, y);
+        const element = createElement[mode](x, y, x, y,activeColor,activeStrokeColor);
         
         setElements((prev) => [...prev, element]);
   
@@ -88,6 +110,7 @@ const Canvas = () => {
             x: prevPan.x + e.movementX,
             y: prevPan.y + e.movementY,
           }));
+          setActiveElem([])
           return;
         }
         if (mode === 'select') {
@@ -107,7 +130,9 @@ const Canvas = () => {
             setRedoStack,
             resizingPoint,
             isResizing,
-            setIsResizing
+            setIsResizing,
+            activeColor,
+            activeStrokeColor
           );
           return;
         }
@@ -119,7 +144,7 @@ const Canvas = () => {
         const y = clientY - pan.y / zoom;
         const index = elements.length - 1;
         const { x1, y1 } = elements[index];
-        const updatedElement = createElement[mode](x1, y1, x, y);
+        const updatedElement = createElement[mode](x1, y1, x, y,activeColor,activeStrokeColor);
         if (updatedElement === null) return;
         const elementsCopy = [...elements];
         elementsCopy[index] = updatedElement;
@@ -131,7 +156,7 @@ const Canvas = () => {
         setDrawing(false);
         setPanning(false);
         if (mode === "select") {
-          selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements,isResizing,setIsResizing);
+          selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements,isResizing,setIsResizing,activeColor,activeStrokeColor);
         }
                
     };
@@ -160,7 +185,7 @@ const Canvas = () => {
     
             // Map loaded elements to their corresponding shapes
             const elementsToSet = loadedElements.map(({ type, x1, y1, x2, y2 }) => {
-                return createElement[type](x1, y1, x2, y2);
+                return createElement[type](x1, y1, x2, y2,activeColor,activeStrokeColor);
             }).filter(element => element !== null); // Remove any null elements
     
             setElements(elementsToSet);
@@ -186,21 +211,21 @@ const Canvas = () => {
                 elements={elements}
                 setActiveElem={setActiveElem}
                 />
-            <Color></Color>
+            <Color currentSelectedIndex={currentSelectedIndex} elements={elements} setElements={setElements} activeElem={activeElem} setActiveElem={setActiveElem} activeColor={activeColor} setActiveColor={setActiveColor} activeStrokeColor={activeStrokeColor} setActiveStrokeColor={setActiveStrokeColor}></Color>
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 // onWheel={handleWheel}
-                width={window.innerWidth}
-                height={window.innerHeight}
+                width={dimensions.width}
+                height={dimensions.height}
                 style={{ cursor: mode === 'grab' ? 'grab' : mode==='select'?'auto':'crosshair' }}
             />
 
             {/* ---- helper selectors around an active element --------------- */}
             {activeElem.length>0 && mode==='select'?
-                <Selectors isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}
+                <Selectors pan={pan} zoom={zoom} isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}
                 ></Selectors>
             :''}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>

@@ -1,5 +1,7 @@
 import rough from "roughjs/bundled/rough.esm";
 //check mouse pointer is on the rectangle
+import {createElement} from '../Clicks/Shapes';
+import { ElementType } from "components/Types/types";
 export function isMouseOnRectangle(x, y, shape) {
   let shapeLeft = shape.x1;
   let shapeRight = shape.x2;
@@ -91,11 +93,14 @@ export function selectTheShapeMouseDown(
   setIsDragging,
   setCurrentSelectedIndex,
   setActiveElem,
+  activeElem,
   elements,
   currentSelectedIndex,
   resizingPoint,
   isResizing,
-  setIsResizing
+  setIsResizing,
+  activeColor,
+  activeStrokeColor
 ) {
   //select the clicked shape
   setStarx(startX);
@@ -118,7 +123,8 @@ export function selectTheShapeMouseDown(
     setCurrentSelectedIndex(closestIndex);
     setIsDragging(true);
     setActiveElem([elements[closestIndex]]);
-    if (elements[closestIndex].type === 'rectangle' && resizingPoint) {
+    console.log("selected",elements[closestIndex].roughElement.options.stroke);
+    if (elements[closestIndex].type === "rectangle" && resizingPoint) {
       setIsResizing(true);
     }
   } else {
@@ -126,6 +132,170 @@ export function selectTheShapeMouseDown(
     setActiveElem([]);
   }
 }
+
+export const updateRealCordinates = (
+  newX1,
+  newY1,
+  newX2,
+  newY2,
+  setActiveElem,
+  setElements,
+  index,
+  elements,
+  activeColor,
+  activeStrokeColor,
+  type
+) => {
+
+  const newElements = [...elements];
+  const updatedElement = createElement[type](newX1, newY1, newX2, newY2,activeColor,activeStrokeColor);
+
+
+  // Replace the old rectangle with the updated one
+  newElements[index] = updatedElement;
+ 
+
+  // Update the state with the new array
+  setActiveElem([updatedElement]);
+  setElements(newElements);
+};
+
+
+const updateMovingCordinatesofRectangle = (
+  newX1,
+  newY1,
+  newX2,
+  newY2,
+  setActiveElem,
+  setElements,
+  index,
+  elements,
+  activeColor,
+  activeStrokeColor
+) => {
+
+  const newElements = [...elements];
+  const updatedElement = createElement['rectangle'](newX1, newY1, newX2, newY2,activeColor,activeStrokeColor);
+
+
+  // Replace the old rectangle with the updated one
+  newElements[index] = updatedElement;
+
+  // Update the state with the new array
+  setActiveElem([updatedElement]);
+  setElements(newElements);
+};
+const updateMovingCordinatesofLine = (
+  newX1,
+  newY1,
+  newX2,
+  newY2,
+  setActiveElem,
+  setElements,
+  index,
+  elements
+) => {
+  const generator = rough.generator({
+    roughness: 0,
+    strokeWidth: 3,
+    stroke: "black",
+    bowing: 0,
+  });
+
+  const newElements = [...elements];
+
+  const updatedRectangle = {
+    ...newElements[index],
+    x1: newX1,
+    y1: newY1,
+    x2: newX2,
+    y2: newY2,
+    roughElement: generator.line(newX1, newY1, newX2, newY2),
+  };
+
+  // Replace the old rectangle with the updated one
+  newElements[index] = updatedRectangle;
+
+  // Update the state with the new array
+  setActiveElem([updatedRectangle]);
+  setElements(newElements);
+};
+
+const updateResizingCordinatesOfRectangle = (
+  newX1,
+  newY1,
+  newX2,
+  newY2,
+  setActiveElem,
+  setElements,
+  index,
+  elements
+) => {
+  const generator = rough.generator({
+    roughness: 0,
+    strokeWidth: 3,
+    stroke: "black",
+    bowing: 0,
+  });
+
+  const newElements = [...elements];
+
+  const updatedRectangle = {
+    ...newElements[index],
+    x1: newX1,
+    y1: newY1,
+    x2: newX2,
+    y2: newY2,
+    roughElement: generator.rectangle(
+      newX1,
+      newY1,
+      newX2 - newX1,
+      newY2 - newY1
+    ),
+  };
+
+  // Replace the old rectangle with the updated one
+  newElements[index] = updatedRectangle;
+
+  // Update the state with the new array
+  setActiveElem([updatedRectangle]);
+  setElements(newElements);
+};
+const updateResizingCordinatesOfLine = (
+  newX1,
+  newY1,
+  newX2,
+  newY2,
+  setActiveElem,
+  setElements,
+  index,
+  elements
+) => {
+  const generator = rough.generator({
+    roughness: 0,
+    strokeWidth: 3,
+    stroke: "black",
+    bowing: 0,
+  });
+
+  const newElements = [...elements];
+
+  const updatedRectangle = {
+    ...newElements[index],
+    x1: newX1,
+    y1: newY1,
+    x2: newX2,
+    y2: newY2,
+    roughElement: generator.line(newX1, newY1, newX2, newY2),
+  };
+
+  // Replace the old rectangle with the updated one
+  newElements[index] = updatedRectangle;
+
+  // Update the state with the new array
+  setActiveElem([updatedRectangle]);
+  setElements(newElements);
+};
 
 export const updateShapeCordinates = (
   index,
@@ -140,15 +310,10 @@ export const updateShapeCordinates = (
   setRedoStack,
   isDragging,
   isResizing,
-  resizingPoint
+  resizingPoint,
+  activeColor,
+  activeStrokeColor
 ) => {
-  const generator = rough.generator({
-    roughness: 0,
-    strokeWidth: 3,
-    stroke: "black",
-    bowing: 0,
-  });
-
   // Ensure the index is within the bounds of the elements array
   if (index < 0 || index >= elements.length) {
     console.error("Index out of bounds");
@@ -163,257 +328,179 @@ export const updateShapeCordinates = (
   if (elements[index].type == "rectangle") {
     if (!isDragging && isResizing) {
       if (resizingPoint == "topleft") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: newX1,
-          y1: newY1,
-          x2: elements[index].x2,
-          y2: elements[index].y2,
-          roughElement: generator.rectangle(
-            newX1,
-            newY1,
-            elements[index].x2 - newX1,
-            elements[index].y2 - newY1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      } else if (resizingPoint == "topmiddle") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: elements[index].x1,
-          y1: newY1,
-          x2: elements[index].x2,
-          y2: elements[index].y2,
-          roughElement: generator.rectangle(
-            elements[index].x1,
-            newY1,
-            elements[index].x2 - elements[index].x1,
-            elements[index].y2 - newY1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      } else if (resizingPoint == "topright") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: elements[index].x1,
-          y1: newY1,
-          x2: newX1,
-          y2: elements[index].y2,
-          roughElement: generator.rectangle(
-            elements[index].x1,
-            newY1,
-            newX1 - elements[index].x1,
-            elements[index].y2 - newY1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      } else if (resizingPoint == "bottomleft") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: newX1,
-          y1: elements[index].y1,
-          x2: elements[index].x2,
-          y2: newY1,
-          roughElement: generator.rectangle(
-            newX1,
-            elements[index].y1,
-            elements[index].x2 - newX1,
-            newY1 - elements[index].y1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      } else if (resizingPoint == "bottommiddle") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: elements[index].x1,
-          y1: elements[index].y1,
-          x2: elements[index].x2,
-          y2: newY1,
-          roughElement: generator.rectangle(
-            elements[index].x1,
-            elements[index].y1,
-            elements[index].x2 - elements[index].x1,
-            newY1 - elements[index].y1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      } else if (resizingPoint == "bottomright") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: elements[index].x1,
-          y1: elements[index].y1,
-          x2: newX1,
-          y2: newY1,
-          roughElement: generator.rectangle(
-            elements[index].x1,
-            elements[index].y1,
-            newX1 - elements[index].x1,
-            newY1 - elements[index].y1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      } else if (resizingPoint == "leftmiddle") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: newX1,
-          y1: elements[index].y1,
-          x2: elements[index].x2,
-          y2: elements[index].y2,
-          roughElement: generator.rectangle(
-            newX1,
-            elements[index].y1,
-            elements[index].x2 - newX1,
-            elements[index].y2 - elements[index].y1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      } else if (resizingPoint == "rightmiddle") {
-        const updatedRectangle = {
-          ...newElements[index],
-          x1: elements[index].x1,
-          y1: elements[index].y1,
-          x2: newX1,
-          y2: elements[index].y2,
-          roughElement: generator.rectangle(
-            elements[index].x1,
-            elements[index].y1,
-            newX1 - elements[index].x1,
-            elements[index].y2 - elements[index].y1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedRectangle;
-
-        // Update the state with the new array
-        setActiveElem([updatedRectangle]);
-        setElements(newElements);
-      }
-    } else {
-      const updatedRectangle = {
-        ...newElements[index],
-        x1: newX1,
-        y1: newY1,
-        x2: newx2,
-        y2: newy2,
-        roughElement: generator.rectangle(
+        updateRealCordinates(
           newX1,
           newY1,
-          newx2 - newX1,
-          newy2 - newY1
-        ),
-      };
+          elements[index].x2,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
 
-      // Replace the old rectangle with the updated one
-      newElements[index] = updatedRectangle;
-
-      // Update the state with the new array
-      setActiveElem([updatedRectangle]);
-      setElements(newElements);
+        );
+      } else if (resizingPoint == "topmiddle") {
+        updateRealCordinates(
+          elements[index].x1,
+          newY1,
+          elements[index].x2,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      } else if (resizingPoint == "topright") {
+        updateRealCordinates(
+          elements[index].x1,
+          newY1,
+          newX1,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      } else if (resizingPoint == "bottomleft") {
+        updateRealCordinates(
+          newX1,
+          elements[index].y1,
+          elements[index].x2,
+          newY1,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      } else if (resizingPoint == "bottommiddle") {
+        updateRealCordinates(
+          elements[index].x1,
+          elements[index].y1,
+          elements[index].x2,
+          newY1,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      } else if (resizingPoint == "bottomright") {
+        updateRealCordinates(
+          elements[index].x1,
+          elements[index].y1,
+          newX1,
+          newY1,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      } else if (resizingPoint == "leftmiddle") {
+        updateRealCordinates(
+          newX1,
+          elements[index].y1,
+          elements[index].x2,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      } else if (resizingPoint == "rightmiddle") {
+        updateRealCordinates(
+          elements[index].x1,
+          elements[index].y1,
+          newX1,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      }
+    } else {
+      updateRealCordinates(
+        newX1,
+        newY1,
+        newx2,
+        newy2,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
     }
   } else if (elements[index].type == "line") {
     if (!isDragging && isResizing) {
       if (resizingPoint == "starting") {
-        const updatedLine = {
-          ...newElements[index],
-          x1: newX1,
-          y1: newY1,
-          x2: elements[index].x2,
-          y2: elements[index].y2,
-          roughElement: generator.line(
-            newX1,
-            newY1,
-            elements[index].x2,
-            elements[index].y2
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedLine;
-
-        // Update the state with the new array
-        setActiveElem([updatedLine]);
-        setElements(newElements);
+        updateRealCordinates(
+          newX1,
+          newY1,
+          elements[index].x2,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+        );
       } else if (resizingPoint == "ending") {
-        const updatedLine = {
-          ...newElements[index],
-          x1: elements[index].x1,
-          y1: elements[index].y1,
-          x2: newX1,
-          y2: newY1,
-          roughElement: generator.line(
-            elements[index].x1,
-            elements[index].y1,
-            newX1,
-            newY1
-          ),
-        };
-
-        // Replace the old rectangle with the updated one
-        newElements[index] = updatedLine;
-
-        // Update the state with the new array
-        setActiveElem([updatedLine]);
-        setElements(newElements);
+        updateRealCordinates(
+          elements[index].x1,
+          elements[index].y1,
+          newX1,
+          newY1,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
       }
     } else {
-      const updatedLine = {
-        ...newElements[index],
-        x1: newX1,
-        y1: newY1,
-        x2: newx2,
-        y2: newy2,
-        roughElement: generator.line(newX1, newY1, newx2, newy2),
-      };
-
-      // Replace the old rectangle with the updated one
-      newElements[index] = updatedLine;
-
-      // Update the state with the new array
-      setActiveElem([updatedLine]);
-      setElements(newElements);
+      updateRealCordinates(
+        newX1,
+        newY1,
+        newx2,
+        newy2,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
     }
   }
 };
@@ -434,7 +521,9 @@ export function selectTheShapeMove(
   setRedoStack,
   resizingPoint,
   isResizing,
-  setIsResizing
+  setIsResizing,
+  activeColor,
+  activeStrokeColor
 ) {
   if (!isDragging && !isResizing) {
     return;
@@ -460,7 +549,9 @@ export function selectTheShapeMove(
       setRedoStack,
       isDragging,
       isResizing,
-      resizingPoint
+      resizingPoint,
+      activeColor,
+      activeStrokeColor
     );
 
     setStarx(mouseX);
@@ -479,7 +570,9 @@ export function selectTheShapeMove(
       setRedoStack,
       isDragging,
       isResizing,
-      resizingPoint
+      resizingPoint,
+      activeColor,
+      activeStrokeColor
     );
 
     setStarx(mouseX);
@@ -492,7 +585,9 @@ export function selectTheShapeMouseUp(
   setUndoStack,
   elements,
   isResizing,
-  setIsResizing
+  setIsResizing,
+  activeColor,
+  activeStrokeColor
 ) {
   if (!isDragging) {
     setIsResizing(false);
