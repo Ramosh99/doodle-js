@@ -6,21 +6,32 @@ import { IoIosColorPalette } from "react-icons/io";
 import { FaPlus } from "react-icons/fa";
 import { CgColorPicker } from "react-icons/cg";
 import { FaGripLines } from "react-icons/fa";
+import { updateRealCordinates } from './Clicks/Move';
 
-export default function Color() {
+export default function Color({currentSelectedIndex,elements,setElements,activeColor,setActiveColor,activeStrokeColor,setActiveStrokeColor,activeElem,setActiveElem}) {
 
     const [mode,setMode]=useState('fill'); //fill or stroke
     const [expanded, setExpanded] = useState(false);
 
     const [colorPallete, setColorPallete] = useState(['black','blue','lightGreen','yellow','red','grey'])
-    const [activeColor, setActiveColor] = useState('black');
-    const [activeStrokeColor,setActiveStrokeColor]=useState('black');
+   
 
   const handleActiveColor = (color) => {//what happens when selecting a color spot
     if(mode=='fill') {
-        setActiveColor(color)
+        setActiveColor(color);
+         
+        if(activeElem.length!=0)
+        {
+            updateRealCordinates(activeElem[0].x1,activeElem[0].y1,activeElem[0].x2,activeElem[0].y2,setActiveElem,setElements,currentSelectedIndex,elements,color, elements[currentSelectedIndex].roughElement.options.stroke,elements[currentSelectedIndex].type);          
+        }
+        
+        
     }else{
         setActiveStrokeColor(color)
+        if(activeElem.length!=0)
+            {
+                updateRealCordinates(activeElem[0].x1,activeElem[0].y1,activeElem[0].x2,activeElem[0].y2,setActiveElem,setElements,currentSelectedIndex,elements,elements[currentSelectedIndex].roughElement.options.fill, color,elements[currentSelectedIndex].type);          
+            }
     }
     setExpanded(false)
   }
