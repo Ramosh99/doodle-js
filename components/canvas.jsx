@@ -40,6 +40,24 @@ const Canvas = () => {
   
   //--------------------------------
 
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    // Update the dimensions state with the window dimensions
+    setDimensions({ width: window.innerWidth, height: window.innerHeight });
+
+    // Optional: Handle window resize
+    const handleResize = () => {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup function to remove the event listener
+    return () => window.removeEventListener('resize', handleResize);
+  }, []); // Empty dependency array means this effect runs once on mount
+
+
     //Canvas initialization
     useLayoutEffect(() => {
         const canvas = canvasRef.current;
@@ -198,8 +216,8 @@ const Canvas = () => {
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 // onWheel={handleWheel}
-                width={window.innerWidth}
-                height={window.innerHeight}
+                width={dimensions.width}
+                height={dimensions.height}
                 style={{ cursor: mode === 'grab' ? 'grab' : mode==='select'?'auto':'crosshair' }}
             />
 
