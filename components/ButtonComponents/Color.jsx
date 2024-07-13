@@ -80,8 +80,8 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
                 display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',paddingTop:'10px',paddingBottom:'10px',marginRight:'10px'
             }}>
             {
-                colorPallete.map((col)=>{
-                    return <ColorSpot col={col} mode={mode} handleActiveColor={handleActiveColor}></ColorSpot>
+                colorPallete.map((col,index)=>{
+                    return <ColorSpot key={index} col={col} mode={mode} handleActiveColor={handleActiveColor}></ColorSpot>
                 })
             }
         </div>
