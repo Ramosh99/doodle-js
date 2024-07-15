@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { RiPaintFill } from "react-icons/ri";
 import { MdOutlineBrush } from "react-icons/md";
 import { GoDotFill } from "react-icons/go";
@@ -14,7 +14,12 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
     const [expanded, setExpanded] = useState(false);
 
     const [colorPallete, setColorPallete] = useState(['black','blue','lightGreen','yellow','red','white'])
+    const [colorPickerColor, setColorPickerColor] = useState('')
    
+    const colorPickerRef=useRef(null)
+    const colorPickerHandler = () => {
+        colorPickerRef.current.click()
+    }
 
   const handleActiveColor = (color) => {//what happens when selecting a color spot
     if(mode=='fill') {
@@ -90,12 +95,30 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
         <div 
             style={{
                 display:'flex',flexDirection:'column',justifyContent:'space-around',alignItems:'center',
-                height:'100px',paddingTop:'10px'
+                height:'100px',paddingTop:'10px',
+                position:'relative'
             }}
         >
-            <IoIosColorPalette className='selectIcon'></IoIosColorPalette>{/* select another color */}
+            {/* select another color */}
+            <IoIosColorPalette 
+                className='selectIcon'
+                onClick={colorPickerHandler}
+            ></IoIosColorPalette>
             <CgColorPicker className='selectIcon'></CgColorPicker>{/* eye dropper */}
             <FaPlus className='selectIcon'></FaPlus>{/* add new color to pallete */}
+            <input 
+                ref={colorPickerRef}
+                type='color' 
+                value={colorPickerColor} 
+                onChange={(e)=>setColorPickerColor(e.target.value)}
+                style={{
+                    borderRadius:'50%',
+                    width:'1px',height:'1px',position:'absolute',
+                    left:'-300px',top:'-25px',
+                    pointerEvents:'none'
+                }}
+            >
+            </input>
         </div>
     
     </div>
