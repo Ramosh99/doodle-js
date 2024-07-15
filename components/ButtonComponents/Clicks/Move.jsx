@@ -320,7 +320,7 @@ export const updateShapeCordinates = (
     return;
   }
 
-  setUndoStack((prev) => [...prev, elements]);
+  
   // Create a copy of the elements array
   const newElements = [...elements];
 
