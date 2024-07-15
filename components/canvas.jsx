@@ -83,8 +83,6 @@ const Canvas = () => {
             return;
         }else if(mode === 'select'){
 
-            const x = e.nativeEvent.offsetX;
-            const y = e.nativeEvent.offsetY;
             selectTheShapeMouseDown(
               parseInt(x), 
               parseInt(y),
