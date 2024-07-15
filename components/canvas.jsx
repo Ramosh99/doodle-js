@@ -79,6 +79,7 @@ const Canvas = () => {
             setPanning(true);
             return;
         }else if(mode === 'select'){
+
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
             selectTheShapeMouseDown(
@@ -88,7 +89,16 @@ const Canvas = () => {
               setStary,
               setIsDragging,
               setCurrentSelectedIndex,
-              setActiveElem,activeElem,elements,currentSelectedIndex,resizingPoint,isResizing,setIsResizing,activeColor,activeStrokeColor);
+              setActiveElem,
+              activeElem,
+              elements,
+              currentSelectedIndex,
+              resizingPoint,
+              isResizing,
+              setIsResizing,
+              activeColor,
+              activeStrokeColor
+            );
             return;
         }
 
@@ -158,7 +168,16 @@ const Canvas = () => {
         setDrawing(false);
         setPanning(false);
         if (mode === "select") {
-          selectTheShapeMouseUp(isDragging,setIsDragging,setUndoStack,elements,isResizing,setIsResizing,activeColor,activeStrokeColor);
+          selectTheShapeMouseUp(
+            isDragging,
+            setIsDragging,
+            setUndoStack,
+            elements,
+            isResizing,
+            setIsResizing,
+            activeColor,
+            activeStrokeColor
+          );
         }
                
     };
