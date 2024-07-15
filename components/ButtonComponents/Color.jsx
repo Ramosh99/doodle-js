@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { RiPaintFill } from "react-icons/ri";
 import { MdOutlineBrush } from "react-icons/md";
 import { GoDotFill } from "react-icons/go";
@@ -13,8 +13,13 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
     const [mode,setMode]=useState('fill'); //fill or stroke
     const [expanded, setExpanded] = useState(false);
 
-    const [colorPallete, setColorPallete] = useState(['black','blue','lightGreen','yellow','red','grey'])
+    const [colorPallete, setColorPallete] = useState(['black','blue','lightGreen','yellow','red','white'])
+    const [colorPickerColor, setColorPickerColor] = useState('')
    
+    const colorPickerRef=useRef(null)
+    const colorPickerHandler = () => {
+        colorPickerRef.current.click()
+    }
 
   const handleActiveColor = (color) => {//what happens when selecting a color spot
     if(mode=='fill') {
@@ -90,12 +95,30 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
         <div 
             style={{
                 display:'flex',flexDirection:'column',justifyContent:'space-around',alignItems:'center',
-                height:'100px',paddingTop:'10px'
+                height:'100px',paddingTop:'10px',
+                position:'relative'
             }}
         >
-            <IoIosColorPalette className='selectIcon'></IoIosColorPalette>{/* select another color */}
+            {/* select another color */}
+            <IoIosColorPalette 
+                className='selectIcon'
+                onClick={colorPickerHandler}
+            ></IoIosColorPalette>
             <CgColorPicker className='selectIcon'></CgColorPicker>{/* eye dropper */}
             <FaPlus className='selectIcon'></FaPlus>{/* add new color to pallete */}
+            <input 
+                ref={colorPickerRef}
+                type='color' 
+                value={colorPickerColor} 
+                onChange={(e)=>setColorPickerColor(e.target.value)}
+                style={{
+                    borderRadius:'50%',
+                    width:'1px',height:'1px',position:'absolute',
+                    left:'-300px',top:'-25px',
+                    pointerEvents:'none'
+                }}
+            >
+            </input>
         </div>
     
     </div>
@@ -110,15 +133,44 @@ const ColorSpot=({ mode, col, handleActiveColor })=>{
   return (
     <>
     {mode=='fill'?
-    <GoDotFill 
-        style={{fontSize:'20px',cursor:'pointer',color:col}}
+    <div 
+        style={{
+            width:'15px',height:'15px',marginTop:'3px',marginBottom:'3px',
+            border:'1px solid grey',borderRadius:'50%',
+            backgroundColor:col,
+            cursor :'pointer'
+        }}
         onClick={()=>handleActiveColor(col)}
     >
-    </GoDotFill>:
-    <FaGripLines
-            style={{fontSize:'20px',cursor:'pointer',color:col}}
-            onClick={()=>handleActiveColor(col)}
-    ></FaGripLines>}
+    </div>:
+    <div 
+        style={{
+            height:'15px',width:'15px',position:'relative',
+            marginBottom:'3px',marginTop:'3px',
+            cursor :'pointer'
+        }}
+        onClick={()=>handleActiveColor(col)}
+    >
+        <div
+            style={{
+                position:'absolute',top:'0px',left:'0px',
+                width:'15px',height:'15px',
+                backgroundColor:col,
+                borderRadius:'50%',
+                border:'1px solid grey'
+            }}
+        ></div>
+        <div
+            style={{
+                position:'absolute',top:'3px',left:'3px',
+                width:'9px',height:'9px',
+                backgroundColor:'white',
+                borderRadius:'50%',
+                border:'1px solid grey'
+            }}
+        >
+        </div>
+    </div>}
     </>
   )
 }
