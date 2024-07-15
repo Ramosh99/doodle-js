@@ -8,7 +8,7 @@ import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
 import Delete from './ButtonComponents/Clicks/Delete';
-
+import CutCopyPaste from './ButtonComponents/Clicks/CutCopyPaste';
 
 
 const Canvas = () => {
@@ -24,6 +24,7 @@ const Canvas = () => {
 
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [clipboard, setClipboard] = useState([]); // Clipboard for copy-paste and cut-paste 
   
   //----selection and move
   const [starx,setStarx]=useState(null);
@@ -66,7 +67,13 @@ const Canvas = () => {
         ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
         ctx.clearRect(-pan.x, -pan.y, canvas.width / zoom, canvas.height / zoom);
         const roughCanvas = rough.canvas(canvas);
-        elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+        elements.forEach((element, index) => {
+          if (element && element.roughElement) {
+              roughCanvas.draw(element.roughElement);
+          } else {
+              console.error(`Element at index ${index} is missing or doesn't have a roughElement property`, element);
+          }
+      });
       }, [elements, pan, zoom]);
 
 
@@ -241,19 +248,23 @@ const Canvas = () => {
                 setActiveElem={setActiveElem}
 
             />
+
+            <CutCopyPaste 
+                elements={elements}
+                setElements={setElements}
+                activeElem={activeElem}
+                setActiveElem={setActiveElem}
+                setRedoStack={setRedoStack}
+                setUndoStack={setUndoStack}
+                clipboard={clipboard}
+                setClipboard={setClipboard}
+                canvasRef={canvasRef}
+                zoom={zoom}
+                pan={pan}
+            />
+
         </div>
     );
   }
-
-  
-
- 
-
- 
- 
-
- 
-
-
 
 export default Canvas;
