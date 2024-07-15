@@ -71,6 +71,10 @@ const Canvas = () => {
 
 
     const handleMouseDown = (e) => {
+      const { clientX, clientY } = e;
+      const x = clientX - pan.x / zoom;
+      const y = clientY - pan.y / zoom;
+
         if (mode === 'grab') {
             setPanning(true);
             return;
@@ -78,8 +82,8 @@ const Canvas = () => {
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
             selectTheShapeMouseDown(
-              parseInt(e.clientX), 
-              parseInt(e.clientY),
+              parseInt(x), 
+              parseInt(y),
               setStarx,
               setStary,
               setIsDragging,
@@ -93,9 +97,7 @@ const Canvas = () => {
         setRedoStack([]); // Clear the redo stack as we're starting a new action
 
         setDrawing(true);
-        const { clientX, clientY } = e;
-        const x = clientX - pan.x / zoom;
-        const y = clientY - pan.y / zoom;
+
         const element = createElement[mode](x, y, x, y,activeColor,activeStrokeColor);
         
         setElements((prev) => [...prev, element]);
@@ -103,6 +105,10 @@ const Canvas = () => {
     };
 
     const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
+      const x = clientX - pan.x / zoom;
+      const y = clientY - pan.y / zoom;
+
         if (panning) {
           setPan((prevPan) => ({
             x: prevPan.x + e.movementX,
@@ -113,8 +119,8 @@ const Canvas = () => {
         }
         if (mode === 'select') {
           selectTheShapeMove(
-            parseInt(e.clientX),
-            parseInt(e.clientY),
+            parseInt(x),
+            parseInt(y),
             isDragging,
             starx,
             stary,
@@ -137,9 +143,7 @@ const Canvas = () => {
       
         if (!drawing) return;
       
-        const { clientX, clientY } = e;
-        const x = clientX - pan.x / zoom;
-        const y = clientY - pan.y / zoom;
+
         const index = elements.length - 1;
         const { x1, y1 } = elements[index];
         const updatedElement = createElement[mode](x1, y1, x, y,activeColor,activeStrokeColor);
