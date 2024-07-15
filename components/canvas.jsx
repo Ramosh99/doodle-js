@@ -251,16 +251,4 @@ const Canvas = () => {
         </div>
     );
   }
-
-  
-
- 
-
- 
- 
-
- 
-
-
-
 export default Canvas;
