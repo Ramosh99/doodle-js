@@ -75,23 +75,3 @@
 
   }
 
-  /* styles.css */
-.excalidraw-toolbar {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-}
-
-.excalidraw-toolbar button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.excalidraw-toolbar button:hover {
-  background-color: #0056b3;
-}

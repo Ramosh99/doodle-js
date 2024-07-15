@@ -4,7 +4,10 @@ export const ElementType = {
     CIRCLE: 'circle',
     TRIANGLE: 'triangle',
     SQUARE: 'square',
-  };
+    ARROW: 'arrow',
+    PAINT_BRUSH: 'paint_brush'
+};
+
   
   
 

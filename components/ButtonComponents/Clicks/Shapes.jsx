@@ -11,6 +11,8 @@ const createElement = {
         stroke: strokecolor,
         strokeWidth: 2,
         roughness: 2,
+        fillWeight: 3, // thicker lines for hachure
+        fillStyle: 'solid' // solid fill
       });
       return new Rectangle(x1, y1, x2, y2, roughElement);
     },
@@ -38,6 +40,39 @@ const createElement = {
       });
       return { type: ElementType.TRIANGLE, x1, y1, x2, y2, roughElement };
     },
+    [ElementType.ARROW]: (x1, y1, x2, y2, strokeColor) => {
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const arrowLength = 20; // Length of the arrowhead lines
+    
+      const arrowPoint1 = [
+        x2 - arrowLength * Math.cos(angle - Math.PI / 6),
+        y2 - arrowLength * Math.sin(angle - Math.PI / 6)
+      ];
+    
+      const arrowPoint2 = [
+        x2 - arrowLength * Math.cos(angle + Math.PI / 6),
+        y2 - arrowLength * Math.sin(angle + Math.PI / 6)
+      ];
+    
+      const roughElement = generator.linearPath([
+        [x1, y1], // Start of the arrow tail
+        [x2, y2], // End of the arrow tail
+        arrowPoint1, // One side of the arrowhead
+        [x2, y2], // Back to the end of the arrow tail
+        arrowPoint2, // Other side of the arrowhead
+        {
+          stroke: strokeColor,
+        }
+      ]);
+    
+      // return roughElement;
+      return { type: ElementType.ARROW, x1, y1, x2, y2, roughElement };
+    },
+    [ElementType.PAINT_BRUSH]: (points, strokeColor) => ({
+      type: ElementType.PAINT_BRUSH,
+      points,
+      roughElement: rough.generator().curve(points, { stroke: strokeColor })
+    }),
 
   };
   
