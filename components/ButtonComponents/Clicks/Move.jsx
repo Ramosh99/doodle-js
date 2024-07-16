@@ -79,6 +79,53 @@ const isMouseOnTriangle = (mouseX, mouseY, x1, y1, x2, y2) => {
   // Check if point is in triangle
   return (u >= 0) && (v >= 0) && (u + v <= 1);
 };
+function isPointOnLineSegment(x1, y1, x2, y2, px, py, tolerance) {
+  const distanceToStart = Math.hypot(px - x1, py - y1);
+  const distanceToEnd = Math.hypot(px - x2, py - y2);
+  const lineLength = Math.hypot(x2 - x1, y2 - y1);
+
+  return Math.abs(distanceToStart + distanceToEnd - lineLength) < tolerance;
+}
+
+//helper func for isMouseOnArrow func
+const distanceToLine = (px, py, x1, y1, x2, y2) => {
+  const A = px - x1;
+  const B = py - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+
+  const dot = A * C + B * D;
+  const len_sq = C * C + D * D;
+  let param = -1;
+  if (len_sq !== 0) { // in case of 0 length line
+    param = dot / len_sq;
+  }
+
+  let xx, yy;
+
+  if (param < 0) {
+    xx = x1;
+    yy = y1;
+  } else if (param > 1) {
+    xx = x2;
+    yy = y2;
+  } else {
+    xx = x1 + param * C;
+    yy = y1 + param * D;
+  }
+
+  const dx = px - xx;
+  const dy = py - yy;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Function to check if the mouse click is near the arrow line
+const isMouseOnArrow = (px, py, x1, y1, x2, y2, threshold = 5) => {
+  const distance = distanceToLine(px, py, x1, y1, x2, y2);
+  return distance <= threshold;
+}
+
+
 
 
 
@@ -97,8 +144,15 @@ export function isMouseInShape(x, y, shape) {
   else if(shape.type=="triangle")
     {
      
-     return isMouseOnTriangle(x,y,shape.x1,shape.y1,shape.x2,shape.y2);
+     return isMouseOnTriangle(shape.x1,shape.y1,shape.x2,shape.y2,x,y);
     }
+    else if(shape.type=="arrow")
+      {
+       
+       return isMouseOnArrow(x,y,shape.x1,shape.y1,shape.x2,shape.y2);
+      }
+      
+    
 }
 
 function distanceToLineSegment(x, y, x1, y1, x2, y2) {
@@ -166,7 +220,7 @@ export function selectTheShapeMouseDown(
 
   elements.forEach((shape, index) => {
     if (isMouseInShape(startX, startY, shape)) {
-      console.log("inside triangle");
+      console.log("inside arrow");
       const distance = minDistanceToShape(startX, startY, shape);
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -180,6 +234,7 @@ export function selectTheShapeMouseDown(
     setCurrentSelectedIndex(closestIndex);
     setIsDragging(true);
     setActiveElem([elements[closestIndex]]);
+    console.log(elements[closestIndex]);
     console.log("selected",elements[closestIndex].roughElement.options.stroke);
     if (elements[closestIndex].type === "rectangle" && resizingPoint) {
       setIsResizing(true);
@@ -642,6 +697,53 @@ export const updateShapeCordinates = (
         );
       }
      
+    } else {
+      updateRealCordinates(
+        newX1,
+        newY1,
+        newx2,
+        newy2,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
+    }
+  }
+  else if (elements[index].type == "arrow") {
+    if (!isDragging && isResizing) {
+      if (resizingPoint == "starting") {
+        updateRealCordinates(
+          newX1,
+          newY1,
+          elements[index].x2,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+        );
+      } else if (resizingPoint == "ending") {
+        updateRealCordinates(
+          elements[index].x1,
+          elements[index].y1,
+          newX1,
+          newY1,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      }
     } else {
       updateRealCordinates(
         newX1,

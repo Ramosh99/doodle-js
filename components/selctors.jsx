@@ -265,5 +265,23 @@ export default function Selectors({
       </div>
     );
   }
+  else if (type === "arrow") {
+    return (
+      <div>
+        <div
+          className="selectors scaleline"
+          id="start"
+          style={{ top: `${adjustedY1 - 4}px`, left: `${adjustedX1 - 4}px` }}
+          onMouseDown={() => handleCornerClick("starting")}
+        ></div>
+        <div
+          className="selectors scaleline"
+          id="end"
+          style={{ top: `${adjustedY2 - 4}px`, left: `${adjustedX2 - 4}px` }}
+          onMouseDown={() => handleCornerClick("ending")}
+        ></div>
+      </div>
+    );
+  }
   return null;
 }
