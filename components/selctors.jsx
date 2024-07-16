@@ -118,6 +118,120 @@ export default function Selectors({
       </div>
     );
   }
+  else if (type === "circle") {
+    const radius = Math.hypot(x2 - x1, y2 - y1);
+    const adjustedRadius = radius * zoom;
+    const centerX = adjustedX1;
+    const centerY = adjustedY1;
+  
+    // Calculate positions for the 8 points
+    const points = {
+      topLeft: { x: centerX - adjustedRadius, y: centerY - adjustedRadius },
+      topMiddle: { x: centerX, y: centerY - adjustedRadius },
+      topRight: { x: centerX + adjustedRadius, y: centerY - adjustedRadius },
+      middleLeft: { x: centerX - adjustedRadius, y: centerY },
+      middleRight: { x: centerX + adjustedRadius, y: centerY },
+      bottomLeft: { x: centerX - adjustedRadius, y: centerY + adjustedRadius },
+      bottomMiddle: { x: centerX, y: centerY + adjustedRadius },
+      bottomRight: { x: centerX + adjustedRadius, y: centerY + adjustedRadius },
+    };
+  
+    return (
+      <div>
+        {/* Circle Resizing Points */}
+        <div
+          className="selectors scale-cursorTL"
+          id="TL"
+          style={{ top: `${points.topLeft.y - 4}px`, left: `${points.topLeft.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("topleft")}
+        ></div>
+        <div
+          className="selectors scale-cursorTM"
+          id="TM"
+          style={{ top: `${points.topMiddle.y - 4}px`, left: `${points.topMiddle.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("topmiddle")}
+        ></div>
+        <div
+          className="selectors scale-cursorTR"
+          id="TR"
+          style={{ top: `${points.topRight.y - 4}px`, left: `${points.topRight.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("topright")}
+        ></div>
+        <div
+          className="selectors scale-cursorLM"
+          id="LM"
+          style={{ top: `${points.middleLeft.y - 4}px`, left: `${points.middleLeft.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("leftmiddle")}
+        ></div>
+        <div
+          className="selectors scale-cursorRM"
+          id="RM"
+          style={{ top: `${points.middleRight.y - 4}px`, left: `${points.middleRight.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("rightmiddle")}
+        ></div>
+        <div
+          className="selectors scale-cursorBL"
+          id="BL"
+          style={{ top: `${points.bottomLeft.y - 4}px`, left: `${points.bottomLeft.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("bottomleft")}
+        ></div>
+        <div
+          className="selectors scale-cursorBM"
+          id="BM"
+          style={{ top: `${points.bottomMiddle.y - 4}px`, left: `${points.bottomMiddle.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("bottommiddle")}
+        ></div>
+        <div
+          className="selectors scale-cursorBR"
+          id="BR"
+          style={{ top: `${points.bottomRight.y - 4}px`, left: `${points.bottomRight.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("bottomright")}
+        ></div>
+  
+        {/* Lines connecting the points */}
+        <div
+          style={{
+            position: "absolute",
+            top: `${points.topLeft.y}px`,
+            left: `${points.topLeft.x}px`,
+            width: `${2 * adjustedRadius}px`,
+            height: "1px",
+            backgroundColor: "blue",
+          }}
+        ></div>
+        <div
+          style={{
+            position: "absolute",
+            top: `${points.topRight.y}px`,
+            left: `${points.topRight.x}px`,
+            width: "1px",
+            height: `${2 * adjustedRadius}px`,
+            backgroundColor: "blue",
+          }}
+        ></div>
+        <div
+          style={{
+            position: "absolute",
+            top: `${points.bottomLeft.y}px`,
+            left: `${points.bottomLeft.x}px`,
+            width: `${2 * adjustedRadius}px`,
+            height: "1px",
+            backgroundColor: "blue",
+          }}
+        ></div>
+        <div
+          style={{
+            position: "absolute",
+            top: `${points.topLeft.y}px`,
+            left: `${points.topLeft.x}px`,
+            width: "1px",
+            height: `${2 * adjustedRadius}px`,
+            backgroundColor: "blue",
+          }}
+        ></div>
+      </div>
+    );
+  }
 
   return null;
 }
