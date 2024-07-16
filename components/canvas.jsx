@@ -78,8 +78,8 @@ const Canvas = () => {
             const x = e.nativeEvent.offsetX;
             const y = e.nativeEvent.offsetY;
             selectTheShapeMouseDown(
-              parseInt(e.clientX), 
-              parseInt(e.clientY),
+              parseInt(x), 
+              parseInt(y),
               setStarx,
               setStary,
               setIsDragging,

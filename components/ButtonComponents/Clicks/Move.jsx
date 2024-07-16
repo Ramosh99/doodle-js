@@ -36,6 +36,19 @@ export function isMouseOnLineSegment(
     distanceFromP1 + distanceFromP2 <= lineLength + tolerance
   );
 }
+function isMouseOnCircle(pointX, pointY, circle) {
+  const { x1, y1, x2, y2 } = circle;
+
+  // Calculate the radius of the circle
+  const radius = Math.hypot(x2 - x1, y2 - y1);
+
+  // Calculate the distance between the point and the center of the circle
+  const distance = Math.hypot(pointX - x1, pointY - y1);
+
+  // Check if the distance is less than or equal to the radius
+  return distance <= radius;
+}
+
 
 //for identify mouse click is inside the shape
 export function isMouseInShape(x, y, shape) {
@@ -43,6 +56,11 @@ export function isMouseInShape(x, y, shape) {
     return isMouseOnRectangle(x, y, shape);
   } else if (shape.type == "line") {
     return isMouseOnLineSegment(x, y, shape.x1, shape.y1, shape.x2, shape.y2);
+  }
+  else if(shape.type=="circle")
+  {
+   
+    return isMouseOnCircle(x,y,shape);
   }
 }
 
@@ -111,11 +129,13 @@ export function selectTheShapeMouseDown(
 
   elements.forEach((shape, index) => {
     if (isMouseInShape(startX, startY, shape)) {
+      console.log("inside circle");
       const distance = minDistanceToShape(startX, startY, shape);
       if (distance < closestDistance) {
         closestDistance = distance;
         closestIndex = index;
       }
+      closestIndex = index;
     }
   });
 
@@ -487,6 +507,40 @@ export const updateShapeCordinates = (
           elements[index].type
         );
       }
+    } else {
+      updateRealCordinates(
+        newX1,
+        newY1,
+        newx2,
+        newy2,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
+    }
+  }
+  else if (elements[index].type == "circle") {
+    if (!isDragging && isResizing) {
+    let  newRadius = Math.hypot(newX1-elements[index].x1, newY1 - elements[index].y1);
+      updateRealCordinates(
+        elements[index].x1,
+        elements[index].y1,
+        elements[index].x1+newRadius,
+        elements[index].y1+newRadius,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
+
+    
     } else {
       updateRealCordinates(
         newX1,
