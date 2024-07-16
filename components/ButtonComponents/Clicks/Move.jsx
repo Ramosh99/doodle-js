@@ -49,6 +49,38 @@ function isMouseOnCircle(pointX, pointY, circle) {
   return distance <= radius;
 }
 
+const isMouseOnTriangle = (mouseX, mouseY, x1, y1, x2, y2) => {
+  // Define the vertices of the triangle
+  const v0x = x1;
+  const v0y = y1;
+  const v1x = x2;
+  const v1y = y2;
+  const v2x = (2 * x1) - x2;
+  const v2y = y2;
+
+  // Compute vectors
+  const dX = mouseX - v2x;
+  const dY = mouseY - v2y;
+  const dX20 = v0x - v2x;
+  const dY20 = v0y - v2y;
+  const dX21 = v1x - v2x;
+  const dY21 = v1y - v2y;
+
+  const dot00 = dX20 * dX20 + dY20 * dY20;
+  const dot01 = dX20 * dX21 + dY20 * dY21;
+  const dot02 = dX20 * dX + dY20 * dY;
+  const dot11 = dX21 * dX21 + dY21 * dY21;
+  const dot12 = dX21 * dX + dY21 * dY;
+
+  const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+  const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+  const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+  // Check if point is in triangle
+  return (u >= 0) && (v >= 0) && (u + v <= 1);
+};
+
+
 
 //for identify mouse click is inside the shape
 export function isMouseInShape(x, y, shape) {
@@ -62,6 +94,11 @@ export function isMouseInShape(x, y, shape) {
    
     return isMouseOnCircle(x,y,shape);
   }
+  else if(shape.type=="triangle")
+    {
+     
+     return isMouseOnTriangle(x,y,shape.x1,shape.y1,shape.x2,shape.y2);
+    }
 }
 
 function distanceToLineSegment(x, y, x1, y1, x2, y2) {
@@ -129,7 +166,7 @@ export function selectTheShapeMouseDown(
 
   elements.forEach((shape, index) => {
     if (isMouseInShape(startX, startY, shape)) {
-      console.log("inside circle");
+      console.log("inside triangle");
       const distance = minDistanceToShape(startX, startY, shape);
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -541,6 +578,70 @@ export const updateShapeCordinates = (
       );
 
     
+    } else {
+      updateRealCordinates(
+        newX1,
+        newY1,
+        newx2,
+        newy2,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
+    }
+  }
+  else if (elements[index].type == "triangle") {
+    if (!isDragging && isResizing) {
+      if (resizingPoint == "pointA") {
+        updateRealCordinates(
+          newX1,
+          newY1,
+          elements[index].x2,
+          elements[index].y2,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+        elements[index].type
+        );
+      }
+     else if (resizingPoint == "pointB") {
+        updateRealCordinates(
+          elements[index].x1,
+          elements[index].y1,
+          newX1,
+          newY1,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      }
+      else if (resizingPoint == "pointC") {
+        updateRealCordinates(
+          elements[index].x1,
+          elements[index].y1,
+          newX1,
+          newY1,
+          setActiveElem,
+          setElements,
+          index,
+          elements,
+          elements[index].roughElement.options.fill,
+          elements[index].roughElement.options.stroke,
+          elements[index].type
+        );
+      }
+     
     } else {
       updateRealCordinates(
         newX1,

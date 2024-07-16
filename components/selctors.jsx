@@ -232,6 +232,38 @@ export default function Selectors({
       </div>
     );
   }
+  else if (type === "triangle") {
+    // Calculate triangle's points and adjust for zoom and pan
+    const points = {
+      pointA: { x: adjustedX1, y: adjustedY1 },
+      pointB: { x: adjustedX2, y: adjustedY2 },
+      pointC: { x: adjustedX1-((adjustedX2-adjustedX1)), y: adjustedY2 }
+    };
 
+    return (
+      <div>
+        {/* Selector for point A */}
+        <div
+          className="selectors scale-cursorA"
+          style={{ top: `${points.pointA.y - 4}px`, left: `${points.pointA.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("pointA")}
+        ></div>
+
+        {/* Selector for point B */}
+        <div
+          className="selectors scale-cursorB"
+          style={{ top: `${points.pointB.y - 4}px`, left: `${points.pointB.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("pointB")}
+        ></div>
+
+        {/* Selector for point C */}
+        <div
+          className="selectors scale-cursorC"
+          style={{ top: `${points.pointC.y - 4}px`, left: `${points.pointC.x - 4}px` }}
+          onMouseDown={() => handleCornerClick("pointC")}
+        ></div>
+      </div>
+    );
+  }
   return null;
 }
