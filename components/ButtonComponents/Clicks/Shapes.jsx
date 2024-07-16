@@ -1,8 +1,34 @@
 import rough from 'roughjs/bundled/rough.esm';
 import { ElementType, Rectangle, Line } from '../../Types/types';
 import { useEffect } from 'react';
+import { getSvgPathFromStroke } from '@/app/drawio/utils';
+import getStroke from "perfect-freehand";
+
 
 const generator = rough.generator();
+
+export const drawElement = (roughCanvas,element,ctx) =>{
+  switch (element.type) {
+      case 'rectangle':
+      case 'line':
+      case 'circle':
+      case 'triangle':
+      case 'square':
+      case 'arrow':
+          roughCanvas.draw(element.roughElement);
+          break;
+      case 'paint_brush':
+          const stroke = getSvgPathFromStroke(getStroke(element.points,{
+              size: 5,
+              thinning: 0.7,
+              smoothing: 0.5
+          }))
+          ctx.fill(new Path2D(stroke))
+          break;
+      default:
+          break;
+  }
+}
 
 const createElement = {
     [ElementType.RECTANGLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
@@ -11,6 +37,8 @@ const createElement = {
         stroke: strokecolor,
         strokeWidth: 2,
         roughness: 2,
+        fillWeight: 3, // thicker lines for hachure
+        fillStyle: 'solid' // solid fill
       });
       return new Rectangle(x1, y1, x2, y2, roughElement);
     },
@@ -38,6 +66,42 @@ const createElement = {
       });
       return { type: ElementType.TRIANGLE, x1, y1, x2, y2, roughElement };
     },
+    [ElementType.ARROW]: (x1, y1, x2, y2, strokeColor) => {
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const arrowLength = 20; // Length of the arrowhead lines
+    
+      const arrowPoint1 = [
+        x2 - arrowLength * Math.cos(angle - Math.PI / 6),
+        y2 - arrowLength * Math.sin(angle - Math.PI / 6)
+      ];
+    
+      const arrowPoint2 = [
+        x2 - arrowLength * Math.cos(angle + Math.PI / 6),
+        y2 - arrowLength * Math.sin(angle + Math.PI / 6)
+      ];
+    
+      const roughElement = generator.linearPath([
+        [x1, y1], // Start of the arrow tail
+        [x2, y2], // End of the arrow tail
+        arrowPoint1, // One side of the arrowhead
+        [x2, y2], // Back to the end of the arrow tail
+        arrowPoint2, // Other side of the arrowhead
+      ]
+    ,        
+    {
+      stroke: strokeColor,
+      strokeWidth: 2,
+    }
+    );
+    
+      // return roughElement;
+      return { type: ElementType.ARROW, x1, y1, x2, y2, roughElement };
+    },
+    [ElementType.PAINT_BRUSH]: (x1, y1, x2, y2) => {({
+      type: ElementType.PAINT_BRUSH,
+      })
+      return { type: ElementType.PAINT_BRUSH, points:[{x:x1,y:y1}] };
+  },
 
   };
   

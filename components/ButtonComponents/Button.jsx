@@ -1,7 +1,7 @@
 // Buttons.js
 import React, { useRef, useState } from 'react';
 import { IoHandLeftOutline } from "react-icons/io5";
-import { RiCircleLine, RiRectangleLine, RiTriangleLine } from "react-icons/ri";
+import { RiArrowDownLine, RiArrowRightLine, RiBrush2Line, RiCircleLine, RiRectangleLine, RiTriangleLine } from "react-icons/ri";
 import { GoCircle, GoDash } from "react-icons/go";
 import { FiSave } from "react-icons/fi";
 import { LuDownload } from "react-icons/lu";
@@ -50,6 +50,16 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                     Grab
                 </IoHandLeftOutline>
 
+                <RiArrowRightLine
+                    className={mode === 'arrow' ? 'activeIcon' : 'selectIcon'}
+                    onClick={() => handleModeChange('arrow')}
+                >
+                </RiArrowRightLine>
+                <RiBrush2Line
+                    className={mode === 'paint_brush' ? 'activeIcon' : 'selectIcon'}
+                    onClick={() => handleModeChange('paint_brush')}
+                >
+                </RiBrush2Line>
 
                 {/* =========   Shape selector ==================================== */}
                 <div>
