@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUndoStack, setRedoStack, clipboard, setClipboard, canvasRef, zoom, pan }) {
-    const [mousePosition, setMousePosition] = useState(null);
+function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUndoStack, setRedoStack,
+     clipboard, setClipboard, mousePosition }) {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -20,25 +20,11 @@ function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUnd
         };
     }, [activeElem, clipboard, elements, mousePosition]);
 
-    const handleMouseDown = (e) => {
-        const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left - pan.x) / zoom;
-        const y = (e.clientY - rect.top - pan.y) / zoom;
-        setMousePosition({ x, y });
-    };
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        canvas.addEventListener('mousedown', handleMouseDown);
-        return () => {
-            canvas.removeEventListener('mousedown', handleMouseDown);
-        };
-    }, []);
-
     const copyElements = () => {
         if (activeElem.length > 0) {
             setClipboard(activeElem);
+            console.log('clipboard', activeElem);
+            console.log('elements', elements);
         }
     };
 
@@ -64,9 +50,14 @@ function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUnd
                 x2: element.x2 + offsetX,
                 y2: element.y2 + offsetY,
             }));
+            console.log('pastedElements', pastedElements);
             setUndoStack((prev) => [...prev, elements]);
             setRedoStack([]);
-            setElements((prev) => [...prev, ...pastedElements]);
+            setElements((prev) => {
+                const updatedElements = [...prev, ...pastedElements];
+                console.log('updated elements', updatedElements);
+                return updatedElements;
+            });
             setActiveElem(pastedElements);
         }
     };

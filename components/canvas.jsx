@@ -26,6 +26,7 @@ const Canvas = () => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [clipboard, setClipboard] = useState([]); // Clipboard for copy-paste and cut-paste 
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
   //----selection and move
   const [starx,setStarx]=useState(null);
@@ -77,6 +78,8 @@ const Canvas = () => {
       const { clientX, clientY } = e;
       const x = clientX - pan.x / zoom;
       const y = clientY - pan.y / zoom;
+
+      setMousePosition({ x, y });
 
         if (mode === 'grab') {
             setPanning(true);
@@ -277,6 +280,7 @@ const Canvas = () => {
               canvasRef={canvasRef}
               zoom={zoom}
               pan={pan}
+              mousePosition={mousePosition}
             />
         </div>
     );
