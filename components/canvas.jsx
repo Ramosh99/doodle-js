@@ -4,7 +4,7 @@ import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import Selectors from './selctors';
 import { findElement } from './ButtonComponents/Clicks/Transform';
-import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
+import Shapes, { createElement, drawElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
 
@@ -58,14 +58,16 @@ const Canvas = () => {
   }, []); // Empty dependency array means this effect runs once on mount
 
 
-    //Canvas initialization
-    useLayoutEffect(() => {
+      //Canvas initialization
+      useLayoutEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
         ctx.clearRect(-pan.x, -pan.y, canvas.width / zoom, canvas.height / zoom);
         const roughCanvas = rough.canvas(canvas);
-        elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+        elements.forEach(element => drawElement(roughCanvas,element,ctx));
+        // elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+
       }, [elements, pan, zoom]);
 
 
@@ -157,7 +159,13 @@ const Canvas = () => {
         const updatedElement = createElement[mode](x1, y1, x, y,activeColor,activeStrokeColor);
         if (updatedElement === null) return;
         const elementsCopy = [...elements];
-        elementsCopy[index] = updatedElement;
+
+        if(mode==='paint_brush'){
+          elementsCopy[index].points = [...elementsCopy[index].points, { x, y }];
+        }
+        else{
+          elementsCopy[index] = updatedElement;
+        }
         setElements(elementsCopy);
       };
       
