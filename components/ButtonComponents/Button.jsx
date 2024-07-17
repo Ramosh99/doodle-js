@@ -9,6 +9,8 @@ import { LuMousePointer2 } from "react-icons/lu";
 import Undoredo from './Clicks/Undoredo';
 import { handleSave } from './Clicks/Save'; 
 import { FaAngleDown } from "react-icons/fa";
+import { FaPencilAlt } from "react-icons/fa"
+import { HiArrowLongRight } from "react-icons/hi2";
 
 const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
 
@@ -50,16 +52,16 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                     Grab
                 </IoHandLeftOutline>
 
-                <RiArrowRightLine
+                <HiArrowLongRight
                     className={mode === 'arrow' ? 'activeIcon' : 'selectIcon'}
                     onClick={() => handleModeChange('arrow')}
                 >
-                </RiArrowRightLine>
-                <RiBrush2Line
+                </HiArrowLongRight>
+                <FaPencilAlt
                     className={mode === 'paint_brush' ? 'activeIcon' : 'selectIcon'}
                     onClick={() => handleModeChange('paint_brush')}
                 >
-                </RiBrush2Line>
+                </FaPencilAlt>
 
                 {/* =========   Shape selector ==================================== */}
                 <div>
