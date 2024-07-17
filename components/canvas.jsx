@@ -209,10 +209,14 @@ const Canvas = () => {
         reader.onload = (e) => {
             const json = e.target.result;
             const loadedElements = JSON.parse(json);
-    
             // Map loaded elements to their corresponding shapes
-            const elementsToSet = loadedElements.map(({ type, x1, y1, x2, y2 }) => {
-                return createElement[type](x1, y1, x2, y2,activeColor,activeStrokeColor);
+            const elementsToSet = loadedElements.map(({ type, x1, y1, x2, y2 ,roughElement}) => {
+              if(type!=='paint_brush'){
+                return createElement[type](x1, y1, x2, y2,roughElement.options.fill,roughElement.options.stroke);
+              }
+              else{
+                return createElement[type](x1, y1);
+              }
             }).filter(element => element !== null); // Remove any null elements
     
             setElements(elementsToSet);
