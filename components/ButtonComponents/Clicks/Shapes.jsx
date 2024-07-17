@@ -7,28 +7,31 @@ import getStroke from "perfect-freehand";
 
 const generator = rough.generator();
 
-export const drawElement = (roughCanvas,element,ctx) =>{
+export const drawElement = (roughCanvas, element, ctx) => {
   switch (element.type) {
-      case 'rectangle':
-      case 'line':
-      case 'circle':
-      case 'triangle':
-      case 'square':
-      case 'arrow':
-          roughCanvas.draw(element.roughElement);
-          break;
-      case 'paint_brush':
-          const stroke = getSvgPathFromStroke(getStroke(element.points,{
-              size: 5,
-              thinning: 0.7,
-              smoothing: 0.5
-          }))
-          ctx.fill(new Path2D(stroke))
-          break;
-      default:
-          break;
+    case 'rectangle':
+    case 'line':
+    case 'circle':
+    case 'triangle':
+    case 'square':
+    case 'arrow':
+      roughCanvas.draw(element.roughElement);
+      break;
+    case 'paint_brush':
+      const stroke = getSvgPathFromStroke(getStroke(element.points, {
+        size: 5,
+        thinning: 0.7,
+        smoothing: 0.5,
+      }));
+      ctx.fillStyle = 'red'; // Set fill style to red
+      ctx.fill(new Path2D(stroke));
+      break;
+    default:
+      console.log("no element type found");
+      break;
   }
 }
+
 
 const createElement = {
     [ElementType.RECTANGLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
@@ -97,7 +100,7 @@ const createElement = {
       // return roughElement;
       return { type: ElementType.ARROW, x1, y1, x2, y2, roughElement };
     },
-    [ElementType.PAINT_BRUSH]: (x1, y1, x2, y2) => {({
+    [ElementType.PAINT_BRUSH]: (x1, y1) => {({
       type: ElementType.PAINT_BRUSH,
       })
       return { type: ElementType.PAINT_BRUSH, points:[{x:x1,y:y1}] };
