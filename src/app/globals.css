@@ -75,3 +75,16 @@
 
   }
 
+  .scale-cursorA
+  {
+    cursor: n-resize;
+  }
+  .scale-cursorB
+  {
+    cursor: nwse-resize;
+  }
+  .scale-cursorC
+  {
+    cursor: nesw-resize;
+  }
+

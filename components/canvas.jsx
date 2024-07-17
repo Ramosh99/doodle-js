@@ -4,11 +4,12 @@ import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import Selectors from './selctors';
 import { findElement } from './ButtonComponents/Clicks/Transform';
-import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
+import Shapes, { createElement, drawElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
 import Delete from './ButtonComponents/Clicks/Delete';
 import CutCopyPaste from './ButtonComponents/Clicks/CutCopyPaste';
+import { ElementType } from './Types/types';
 
 
 
@@ -44,6 +45,11 @@ const Canvas = () => {
   
   //--------------------------------
 
+  //--------multiple selection-------
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+  const [isCtrlPressedCount,setIsCtrlPressedCount]=useState(0);
+  //------------------
+
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -60,16 +66,41 @@ const Canvas = () => {
     // Cleanup function to remove the event listener
     return () => window.removeEventListener('resize', handleResize);
   }, []); // Empty dependency array means this effect runs once on mount
+   //--------to identify whether ctrl is pressed or not
+   useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Control') {
+        setIsCtrlPressed(true);
+      }
+    };
+
+    const handleKeyUp = (event) => {
+      if (event.key === 'Control') {
+        setIsCtrlPressed(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    // Cleanup event listeners on component unmount
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isCtrlPressedCount]);
 
 
-    //Canvas initialization
-    useLayoutEffect(() => {
+      //Canvas initialization
+      useLayoutEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
         ctx.clearRect(-pan.x, -pan.y, canvas.width / zoom, canvas.height / zoom);
         const roughCanvas = rough.canvas(canvas);
-        elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+        elements.forEach(element => drawElement(roughCanvas,element,ctx));
+        // elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+        
       }, [elements, pan, zoom]);
 
 
@@ -101,7 +132,8 @@ const Canvas = () => {
               isResizing,
               setIsResizing,
               activeColor,
-              activeStrokeColor
+              activeStrokeColor,
+              isCtrlPressed
             );
 
             // Save current state to undo stack before starting to draw
@@ -124,6 +156,7 @@ const Canvas = () => {
     };
 
     const handleMouseMove = (e) => {
+      setIsCtrlPressedCount(isCtrlPressedCount=>isCtrlPressedCount+1);
       const { clientX, clientY } = e;
       const x = clientX - pan.x / zoom;
       const y = clientY - pan.y / zoom;
@@ -168,7 +201,13 @@ const Canvas = () => {
         const updatedElement = createElement[mode](x1, y1, x, y,activeColor,activeStrokeColor);
         if (updatedElement === null) return;
         const elementsCopy = [...elements];
-        elementsCopy[index] = updatedElement;
+
+        if(mode==='paint_brush'){
+          elementsCopy[index].points = [...elementsCopy[index].points, { x, y }];
+        }
+        else{
+          elementsCopy[index] = updatedElement;
+        }
         setElements(elementsCopy);
       };
       
@@ -212,17 +251,24 @@ const Canvas = () => {
         reader.onload = (e) => {
             const json = e.target.result;
             const loadedElements = JSON.parse(json);
-    
-            // Map loaded elements to their corresponding shapes
-            const elementsToSet = loadedElements.map(({ type, x1, y1, x2, y2 }) => {
-                return createElement[type](x1, y1, x2, y2,activeColor,activeStrokeColor);
-            }).filter(element => element !== null); // Remove any null elements
+            console.log(loadedElements);
+            const elementsToSet = loadedElements.flatMap(({ type, x1, y1, x2, y2, roughElement, points }) => {
+                if (type !== ElementType.PAINT_BRUSH) {
+                    return createElement[type](x1, y1, x2, y2, roughElement.options.fill, roughElement.options.stroke);
+                } else {
+                    console.log(type);
+                    return points.map(point => createElement[ElementType.PAINT_BRUSH](point.x, point.y));
+                    // console.log(points.x);
+                }
+            }).filter(element => element !== null);
     
             setElements(elementsToSet);
         };
     
         reader.readAsText(file);
-    }; 
+    };
+  
+  
   
 
     // Check if the point is close enough to the line segment within the tolerance
@@ -254,10 +300,25 @@ const Canvas = () => {
             />
 
             {/* ---- helper selectors around an active element --------------- */}
-            {activeElem.length>0 && mode==='select'?
-                <Selectors pan={pan} zoom={zoom} isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}
-                ></Selectors>
-            :''}
+            {activeElem.length > 0 && mode === 'select' ?
+  activeElem.map((element, index) => (
+    <Selectors
+      key={index}
+      pan={pan}
+      zoom={zoom}
+      isResizing={isResizing}
+      mode={mode}
+      setMode={setMode}
+      setIsDragging={setIsDragging}
+      setIsResizing={setIsResizing}
+      resizingPoint={resizingPoint}
+      setResizingPoint={setResizingPoint}
+      activeElem={activeElem}
+      shape={element}
+    />
+  ))
+  : ''
+}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
             <Delete 
               elements={elements}
@@ -285,6 +346,4 @@ const Canvas = () => {
         </div>
     );
   }
-
-  
 export default Canvas;

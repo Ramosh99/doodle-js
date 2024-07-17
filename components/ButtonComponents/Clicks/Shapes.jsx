@@ -1,8 +1,37 @@
 import rough from 'roughjs/bundled/rough.esm';
 import { ElementType, Rectangle, Line } from '../../Types/types';
 import { useEffect } from 'react';
+import { getSvgPathFromStroke } from '@/app/drawio/utils';
+import getStroke from "perfect-freehand";
+
 
 const generator = rough.generator();
+
+export const drawElement = (roughCanvas, element, ctx) => {
+  switch (element.type) {
+    case 'rectangle':
+    case 'line':
+    case 'circle':
+    case 'triangle':
+    case 'square':
+    case 'arrow':
+      roughCanvas.draw(element.roughElement);
+      break;
+    case 'paint_brush':
+      const stroke = getSvgPathFromStroke(getStroke(element.points, {
+        size: 5,
+        thinning: 0.7,
+        smoothing: 0.5,
+      }));
+      ctx.fillStyle = 'red'; // Set fill style to red
+      ctx.fill(new Path2D(stroke));
+      break;
+    default:
+      console.log("no element type found");
+      break;
+  }
+}
+
 
 const createElement = {
     [ElementType.RECTANGLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
@@ -60,19 +89,22 @@ const createElement = {
         arrowPoint1, // One side of the arrowhead
         [x2, y2], // Back to the end of the arrow tail
         arrowPoint2, // Other side of the arrowhead
-        {
-          stroke: strokeColor,
-        }
-      ]);
+      ]
+    ,        
+    {
+      stroke: strokeColor,
+      strokeWidth: 2,
+    }
+    );
     
       // return roughElement;
       return { type: ElementType.ARROW, x1, y1, x2, y2, roughElement };
     },
-    [ElementType.PAINT_BRUSH]: (points, strokeColor) => ({
+    [ElementType.PAINT_BRUSH]: (x1, y1) => {({
       type: ElementType.PAINT_BRUSH,
-      points,
-      roughElement: rough.generator().curve(points, { stroke: strokeColor })
-    }),
+      })
+      return { type: ElementType.PAINT_BRUSH, points:[{x:x1,y:y1}] };
+  },
 
   };
   
