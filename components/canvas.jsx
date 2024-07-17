@@ -7,6 +7,8 @@ import { findElement } from './ButtonComponents/Clicks/Transform';
 import Shapes, { createElement, drawElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
+import Delete from './ButtonComponents/Clicks/Delete';
+import CutCopyPaste from './ButtonComponents/Clicks/CutCopyPaste';
 import { ElementType } from './Types/types';
 
 
@@ -24,6 +26,8 @@ const Canvas = () => {
 
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [clipboard, setClipboard] = useState([]); // Clipboard for copy-paste and cut-paste 
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   
   //----selection and move
   const [starx,setStarx]=useState(null);
@@ -106,6 +110,8 @@ const Canvas = () => {
       const x = clientX - pan.x / zoom;
       const y = clientY - pan.y / zoom;
 
+      setMousePosition({ x, y });
+
         if (mode === 'grab') {
             setPanning(true);
             return;
@@ -129,6 +135,11 @@ const Canvas = () => {
               activeStrokeColor,
               isCtrlPressed
             );
+
+            // Save current state to undo stack before starting to draw
+            setUndoStack((prev) => [...prev, elements]);
+            setRedoStack([]);
+
             return;
         }
 
@@ -309,6 +320,29 @@ const Canvas = () => {
   : ''
 }
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
+            <Delete 
+              elements={elements}
+              setElements={setElements}
+              activeElem={activeElem}
+              setUndoStack={setUndoStack}
+              setRedoStack={setRedoStack}
+              setActiveElem={setActiveElem}
+            />
+
+            <CutCopyPaste 
+              elements={elements}
+              setElements={setElements}
+              activeElem={activeElem}
+              setActiveElem={setActiveElem}
+              setRedoStack={setRedoStack}
+              setUndoStack={setUndoStack}
+              clipboard={clipboard}
+              setClipboard={setClipboard}
+              canvasRef={canvasRef}
+              zoom={zoom}
+              pan={pan}
+              mousePosition={mousePosition}
+            />
         </div>
     );
   }
