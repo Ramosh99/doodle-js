@@ -41,6 +41,11 @@ const Canvas = () => {
   
   //--------------------------------
 
+  //--------multiple selection-------
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+  const [isCtrlPressedCount,setIsCtrlPressedCount]=useState(0);
+  //------------------
+
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -57,6 +62,29 @@ const Canvas = () => {
     // Cleanup function to remove the event listener
     return () => window.removeEventListener('resize', handleResize);
   }, []); // Empty dependency array means this effect runs once on mount
+   //--------to identify whether ctrl is pressed or not
+   useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Control') {
+        setIsCtrlPressed(true);
+      }
+    };
+
+    const handleKeyUp = (event) => {
+      if (event.key === 'Control') {
+        setIsCtrlPressed(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    // Cleanup event listeners on component unmount
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isCtrlPressedCount]);
 
 
       //Canvas initialization
@@ -68,7 +96,7 @@ const Canvas = () => {
         const roughCanvas = rough.canvas(canvas);
         elements.forEach(element => drawElement(roughCanvas,element,ctx));
         // elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
-
+        
       }, [elements, pan, zoom]);
 
 
@@ -98,7 +126,8 @@ const Canvas = () => {
               isResizing,
               setIsResizing,
               activeColor,
-              activeStrokeColor
+              activeStrokeColor,
+              isCtrlPressed
             );
             return;
         }
@@ -116,6 +145,7 @@ const Canvas = () => {
     };
 
     const handleMouseMove = (e) => {
+      setIsCtrlPressedCount(isCtrlPressedCount=>isCtrlPressedCount+1);
       const { clientX, clientY } = e;
       const x = clientX - pan.x / zoom;
       const y = clientY - pan.y / zoom;
@@ -259,10 +289,25 @@ const Canvas = () => {
             />
 
             {/* ---- helper selectors around an active element --------------- */}
-            {activeElem.length>0 && mode==='select'?
-                <Selectors pan={pan} zoom={zoom} isResizing={isResizing} mode={mode} setMode={setMode} setIsDragging={setIsDragging} setIsResizing={setIsResizing} resizingPoint={resizingPoint} setResizingPoint={setResizingPoint} activeElem={activeElem}
-                ></Selectors>
-            :''}
+            {activeElem.length > 0 && mode === 'select' ?
+  activeElem.map((element, index) => (
+    <Selectors
+      key={index}
+      pan={pan}
+      zoom={zoom}
+      isResizing={isResizing}
+      mode={mode}
+      setMode={setMode}
+      setIsDragging={setIsDragging}
+      setIsResizing={setIsResizing}
+      resizingPoint={resizingPoint}
+      setResizingPoint={setResizingPoint}
+      activeElem={activeElem}
+      shape={element}
+    />
+  ))
+  : ''
+}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
         </div>
     );
