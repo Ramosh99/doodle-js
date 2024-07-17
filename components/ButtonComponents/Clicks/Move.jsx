@@ -49,36 +49,33 @@ function isMouseOnCircle(pointX, pointY, circle) {
   return distance <= radius;
 }
 
-const isMouseOnTriangle = (mouseX, mouseY, x1, y1, x2, y2) => {
-  // Define the vertices of the triangle
-  const v0x = x1;
-  const v0y = y1;
-  const v1x = x2;
-  const v1y = y2;
-  const v2x = (2 * x1) - x2;
-  const v2y = y2;
+function isMouseOnTriangle(pointX,pointY,shape)
+{
+  let x1=shape.x1;
+  let y1=shape.y1;
+  let x2=shape.x2;
+  let y2=shape.y2;
+  let x3=2*(shape.x1)-shape.x2;
+  let y3=shape.y2;
+  
+  const denominator=((y1 - y2) * (x3 - x2) +
+  (x2 - x1) * (y3 - y2));
 
-  // Compute vectors
-  const dX = mouseX - v2x;
-  const dY = mouseY - v2y;
-  const dX20 = v0x - v2x;
-  const dY20 = v0y - v2y;
-  const dX21 = v1x - v2x;
-  const dY21 = v1y - v2y;
+  const a = ((y1 - y2) * (pointX - x2) +
+  (x2 - x1) * (pointY - y2)) / denominator;
+const b = ((y2 - y3) * (pointX- x2) +
+  (x3 - x2) * (pointY - y2)) / denominator;
+const c = 1 - a - b;
+if (a >= 0 && b >= 0 && c >= 0) {
+  return true;
+} else {
+  return false;
+}
 
-  const dot00 = dX20 * dX20 + dY20 * dY20;
-  const dot01 = dX20 * dX21 + dY20 * dY21;
-  const dot02 = dX20 * dX + dY20 * dY;
-  const dot11 = dX21 * dX21 + dY21 * dY21;
-  const dot12 = dX21 * dX + dY21 * dY;
 
-  const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
-  const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-  const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+}
 
-  // Check if point is in triangle
-  return (u >= 0) && (v >= 0) && (u + v <= 1);
-};
+
 function isPointOnLineSegment(x1, y1, x2, y2, px, py, tolerance) {
   const distanceToStart = Math.hypot(px - x1, py - y1);
   const distanceToEnd = Math.hypot(px - x2, py - y2);
@@ -144,7 +141,7 @@ export function isMouseInShape(x, y, shape) {
   else if(shape.type=="triangle")
     {
      
-     return isMouseOnTriangle(shape.x1,shape.y1,shape.x2,shape.y2,x,y);
+     return isMouseOnTriangle(x,y,shape);
     }
     else if(shape.type=="arrow")
       {
@@ -209,7 +206,8 @@ export function selectTheShapeMouseDown(
   isResizing,
   setIsResizing,
   activeColor,
-  activeStrokeColor
+  activeStrokeColor,
+  isCtrlPressed
 ) {
   //select the clicked shape
   setStarx(startX);
@@ -220,7 +218,6 @@ export function selectTheShapeMouseDown(
 
   elements.forEach((shape, index) => {
     if (isMouseInShape(startX, startY, shape)) {
-      console.log("inside arrow");
       const distance = minDistanceToShape(startX, startY, shape);
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -233,15 +230,33 @@ export function selectTheShapeMouseDown(
   if (closestIndex !== -1) {
     setCurrentSelectedIndex(closestIndex);
     setIsDragging(true);
-    setActiveElem([elements[closestIndex]]);
-    console.log(elements[closestIndex]);
+    if(isCtrlPressed)
+    {
+      setActiveElem(prevActiveElem => {
+        // Check if the element is already in the activeElem array
+        if (!prevActiveElem.includes(elements[closestIndex])) {
+          return [...prevActiveElem, elements[closestIndex]];
+        }
+        return prevActiveElem;
+      });
+    }
+    else{
+      setActiveElem([elements[closestIndex]]);
+
+    }
+    
     console.log("selected",elements[closestIndex].roughElement.options.stroke);
     if (elements[closestIndex].type === "rectangle" && resizingPoint) {
       setIsResizing(true);
     }
   } else {
     setIsDragging(false);
-    setActiveElem([]);
+    if(!isCtrlPressed)
+    {
+      setActiveElem([]);
+
+    }
+   
   }
 }
 
