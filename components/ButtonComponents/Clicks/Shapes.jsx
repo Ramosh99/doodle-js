@@ -27,6 +27,7 @@ export const drawElement = (roughCanvas, element, ctx) => {
       ctx.fill(new Path2D(stroke));
       break;
     default:
+      console.log("no element type found");
       break;
   }
 }
