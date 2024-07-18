@@ -120,7 +120,11 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                 {/* --- Reset canvas ---- */}
                 <MdOutlineRefresh
                     className='selectIcon'
-                    onClick={() => setElements([])}
+                    onClick={() => {
+                        setElements([]);
+                        setActiveElem([]);
+                    }}
+                    
                 />
 
                 {/* --- Save ---- */}

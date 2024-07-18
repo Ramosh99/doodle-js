@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { createElement } from './Shapes';
+import { ElementType } from '../../Types/types';
 
-function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUndoStack, setRedoStack,
-     clipboard, setClipboard, mousePosition }) {
+function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUndoStack, setRedoStack, clipboard, setClipboard, mousePosition }) {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -43,14 +44,15 @@ function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUnd
         if (clipboard.length > 0 && mousePosition) {
             const offsetX = mousePosition.x - clipboard[0].x1;
             const offsetY = mousePosition.y - clipboard[0].y1;
-            const pastedElements = clipboard.map(element => ({
-                ...element,
-                x1: element.x1 + offsetX,
-                y1: element.y1 + offsetY,
-                x2: element.x2 + offsetX,
-                y2: element.y2 + offsetY,
-            }));
-            console.log('pastedElements', pastedElements);
+            const pastedElements = clipboard.map(element => {
+                const { type, x1, y1, x2, y2, roughElement, points } = element;
+                if (type === ElementType.PAINT_BRUSH) {
+                    const newPoints = points.map(point => ({ x: point.x + offsetX, y: point.y + offsetY }));
+                    return createElement[type](x1 + offsetX, y1 + offsetY, x2 + offsetX, y2 + offsetY, newPoints);
+                } else {
+                    return createElement[type](x1 + offsetX, y1 + offsetY, x2 + offsetX, y2 + offsetY, roughElement.options.fill, roughElement.options.stroke);
+                }
+            });
             setUndoStack((prev) => [...prev, elements]);
             setRedoStack([]);
             setElements((prev) => {
