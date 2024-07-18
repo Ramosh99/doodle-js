@@ -112,7 +112,7 @@ const Canvas = () => {
             setPanning(true);
             return;
         }else if(mode === 'select'){
-
+              console.log(elements);
             selectTheShapeMouseDown(
               parseInt(x), 
               parseInt(y),
@@ -145,8 +145,8 @@ const Canvas = () => {
 
         setDrawing(true);
 
-        const element = createElement[mode](x, y, x, y,activeColor,activeStrokeColor);
-        
+        let element = createElement[mode](x, y, x, y,activeColor,activeStrokeColor);
+
         setElements((prev) => [...prev, element]);
   
     };
@@ -223,7 +223,21 @@ const Canvas = () => {
             activeStrokeColor
           );
         }
-               
+        
+        const element = elements[elements.length-1];
+// ------------------------------- maintaining x1<x1 & y1<y2 ----------------------
+        if(element.type==="rectangle"){
+          if(element.x2<element.x1){
+            let tmp = element.x1;
+            element.x1=element.x2;
+            element.x2=tmp;
+          }
+          if(element.y2<element.y1){
+            let tmp = element.y1;
+            element.y1=element.y2;
+            element.y2=tmp;
+          }
+        } 
     };
 
     const handleModeChange = (newMode) => {
