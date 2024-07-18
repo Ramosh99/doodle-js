@@ -257,7 +257,6 @@ const Canvas = () => {
     
   
   
-  
 
     // Check if the point is close enough to the line segment within the tolerance
     return (
@@ -284,8 +283,13 @@ const Canvas = () => {
                 // onWheel={handleWheel}
                 width={dimensions.width}
                 height={dimensions.height}
-                style={{ cursor: mode === 'grab' ? 'grab' : mode==='select'?'auto':'crosshair' }}
-            />
+                style={{
+                  cursor: mode === 'grab' ? 'grab' : 
+                          mode === 'select' ? 'auto' : 
+                          mode === 'paint_brush' ? "url('data:image/x-icon;base64,AAACAAEAICAQAAIAAwDoAgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAAAAxJ0AALiTAACefgAAq4kAANuvAADougAAGqsAAJF0AADPpQAAAJ4FAA7PAAAAxc8A/8wAAACRBQCrCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDQAAAAAAAAAAAAAAAAAAINCEAAAAAAAAAAAAAAAAAg0IJAAAAAAAAAAAAAAAACDQgBQAAAAAAAAAAAAAAAINCDAYAAAAAAAAAAAAAAAg0IMBtAAAAAAAAAAAAAACDQgwG0AAAAAAAAAAAAAAINCAAbQAAAAAAAAAAAAAAg0IJVtAAAAAAAAAAAAAACDQgkG0AAAAAAAAAAAAAAINCCQDQAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAOpwCwAAAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAIpwCwAAAAAAAAAAAAAAAAg3ALAAAAAAAAAAAAAAAACDQAsAAAAAAAAAAAAAAAAINACwAAAAAAAAAAAAAAAAg0ALAAAAAAAAAAAAAAAACDQgkAAAAAAAAAAAAAAAAANCCQAAAAAAAAAAAAAAAAA0IZAAAAAAAAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////////4////8H///+A////AP///gD///wA///4AP//8AH//+AD///AB///gA///wAf//4Bv//8A///+Af///AP///gH///wD///4B///8A///+Af///AP///gH///4D///8B////A////h////5///////////////w=='), auto" : 
+                          'crosshair'
+                }}               
+                />
 
             {/* ---- helper selectors around an active element --------------- */}
             {activeElem.length > 0 && mode === 'select' ?
