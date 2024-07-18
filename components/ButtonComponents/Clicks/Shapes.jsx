@@ -132,7 +132,7 @@ const createElement = {
             e.preventDefault();
             handleModeChange('select');
             break;
-          case 'c':
+          case 'o':
             e.preventDefault();
             handleModeChange(ElementType.CIRCLE);
             break;
