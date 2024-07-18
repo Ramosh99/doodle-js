@@ -12,8 +12,10 @@ import { FaAngleDown } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import { PiTextTBold } from "react-icons/pi";
 import { HiArrowLongRight } from "react-icons/hi2";
+import { MdOutlineRefresh } from "react-icons/md";
+import ZoomNGrag from './Clicks/ZoomNGrag';
 
-const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
+const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
 
     //shape selector options-----------------------------------------------------------------------
     const [shapeMenu,setShapeMenu] = useState(false); // to show/hide shape menu
@@ -34,7 +36,7 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
     return (
         <>
             <div style={{ 
-                position: 'absolute', top:'10px', left:'20px',
+                position: 'fixed', top:'10px', left:'20px',
                 display:'flex', justifyContent:'space-around', alignItems:'center',
                 width:'420px', height:'30px', backgroundColor:'white', borderRadius:'4px',
                 boxShadow:'0 0 3px lightGrey',
@@ -129,6 +131,15 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                 </div>
 
 
+                {/* --- Reset canvas ---- */}
+                <MdOutlineRefresh
+                    className='selectIcon'
+                    onClick={() => {
+                        setElements([]);
+                        setActiveElem([]);
+                    }}
+                />
+
                 {/* --- Save ---- */}
                 <div className='toolTipCov' style={{marginLeft:'60px'}}>
                     <FiSave 
@@ -149,6 +160,7 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
             </div>
             
             {/* --- UndoRedo ---- */}
+            <ZoomNGrag zoom={zoom} setZoom={setZoom} setPan={setPan}/>
             <Undoredo 
                 elements={elements} 
                 undoStack={undoStack} 
