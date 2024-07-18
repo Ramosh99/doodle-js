@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import Selectors from './selctors';
@@ -95,15 +95,35 @@ const Canvas = () => {
       useLayoutEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
+      
+        // Reset the current transformation matrix to the identity matrix
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      
+        // Clear the entire canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+        // Apply new transformations for zoom and pan
         ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
-        ctx.clearRect(-pan.x, -pan.y, canvas.width / zoom, canvas.height / zoom);
+      
+        // Now draw the rectangle and other elements
+        ctx.fillRect(0, 0, 500, 300);
+      
         const roughCanvas = rough.canvas(canvas);
-        elements.forEach(element => drawElement(roughCanvas,element,ctx));
-        // elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
-        
+        elements.forEach(element => drawElement(roughCanvas, element, ctx));
       }, [elements, pan, zoom]);
 
-
+    useEffect(() => {
+      const panFunction = (e) => {
+        setPan((prevPan) => ({
+          x: prevPan.x - e.deltaX,
+          y: prevPan.y - e.deltaY,
+        }));
+      }
+      document.addEventListener('wheel', panFunction);
+      return () => {
+        document.removeEventListener('wheel', panFunction);
+      };
+    }, []);
 
     const handleMouseDown = (e) => {
       const { clientX, clientY } = e;
