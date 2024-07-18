@@ -1,15 +1,15 @@
 'use client';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import Selectors from './selctors';
-import { findElement } from './ButtonComponents/Clicks/Transform';
 import Shapes, { createElement, drawElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
 import Delete from './ButtonComponents/Clicks/Delete';
 import CutCopyPaste from './ButtonComponents/Clicks/CutCopyPaste';
 import { ElementType } from './Types/types';
+// import handleLoad from './ButtonComponents/Clicks/Load';
 
 
 
@@ -21,7 +21,7 @@ const Canvas = () => {
     const [panning, setPanning] = useState(false);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [mode, setMode] = useState("grab");//active element / current using
+    const [mode, setMode] = useState("select");//active element / current using
     const canvasRef = useRef(null);
 
   const [undoStack, setUndoStack] = useState([]);
@@ -53,20 +53,15 @@ const Canvas = () => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    // Update the dimensions state with the window dimensions
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
-
-    // Optional: Handle window resize
     const handleResize = () => {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
     };
-
     window.addEventListener('resize', handleResize);
-
-    // Cleanup function to remove the event listener
     return () => window.removeEventListener('resize', handleResize);
   }, []); // Empty dependency array means this effect runs once on mount
-   //--------to identify whether ctrl is pressed or not
+   
+  //--------to identify whether ctrl is pressed or not
    useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Control') {
@@ -95,14 +90,15 @@ const Canvas = () => {
       useLayoutEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
-        ctx.clearRect(-pan.x, -pan.y, canvas.width / zoom, canvas.height / zoom);
+        // Reset the current transformation matrix to the identity matrix
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // Clear the entire canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Apply new transformations for zoom and pan
+        ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);  
         const roughCanvas = rough.canvas(canvas);
-        elements.forEach(element => drawElement(roughCanvas,element,ctx));
-        // elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
-        
+        elements.forEach(element => drawElement(roughCanvas, element, ctx));
       }, [elements, pan, zoom]);
-
 
 
     const handleMouseDown = (e) => {
@@ -230,13 +226,6 @@ const Canvas = () => {
                
     };
 
-    //------------------------------------------------zooming option--------------------------------
-    // const handleWheel = (e) => {
-    //     const zoomFactor = 1.1;
-    //     const newZoom = e.deltaY < 0 ? zoom * zoomFactor : zoom / zoomFactor;
-    //     setZoom(newZoom);
-    // };
-
     const handleModeChange = (newMode) => {
         setMode(newMode);
     };
@@ -284,6 +273,9 @@ const Canvas = () => {
                 setRedoStack={setRedoStack}
                 elements={elements}
                 setActiveElem={setActiveElem}
+                zoom={zoom}
+                setZoom={setZoom}
+                setPan={setPan}
                 />
             <Color currentSelectedIndex={currentSelectedIndex} elements={elements} setElements={setElements} activeElem={activeElem} setActiveElem={setActiveElem} activeColor={activeColor} setActiveColor={setActiveColor} activeStrokeColor={activeStrokeColor} setActiveStrokeColor={setActiveStrokeColor}></Color>
             <canvas
@@ -346,6 +338,7 @@ const Canvas = () => {
               pan={pan}
               mousePosition={mousePosition}
             />
+            {/* <handleLoad setElements={setElements}/> */}
         </div>
     );
   }
