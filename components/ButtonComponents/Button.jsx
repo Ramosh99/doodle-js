@@ -11,6 +11,7 @@ import { handleSave } from './Clicks/Save';
 import { FaAngleDown } from "react-icons/fa";
 import { FaPencilAlt } from "react-icons/fa"
 import { HiArrowLongRight } from "react-icons/hi2";
+import { MdOutlineRefresh } from "react-icons/md";
 
 const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
 
@@ -115,6 +116,12 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                 >
                     Line
                 </GoDash>
+
+                {/* --- Reset canvas ---- */}
+                <MdOutlineRefresh
+                    className='selectIcon'
+                    onClick={() => setElements([])}
+                />
 
                 {/* --- Save ---- */}
                 <FiSave 
