@@ -3,6 +3,7 @@ import { createElement } from './Shapes';
 import { ElementType } from '../../Types/types';
 
 function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUndoStack, setRedoStack, clipboard, setClipboard, mousePosition }) {
+    const [pasteCount, setPasteCount] = useState(0);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -24,14 +25,14 @@ function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUnd
     const copyElements = () => {
         if (activeElem.length > 0) {
             setClipboard(activeElem);
-            console.log('clipboard', activeElem);
-            console.log('elements', elements);
+            setPasteCount(0); // Reset paste count on new copy
         }
     };
 
     const cutElements = () => {
         if (activeElem.length > 0) {
             setClipboard(activeElem);
+            setPasteCount(0); // Reset paste count on new cut
             const remainingElements = elements.filter(element => !activeElem.includes(element));
             setUndoStack((prev) => [...prev, elements]);
             setRedoStack([]);
@@ -42,8 +43,9 @@ function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUnd
 
     const pasteElements = () => {
         if (clipboard.length > 0 && mousePosition) {
-            const offsetX = mousePosition.x - clipboard[0].x1;
-            const offsetY = mousePosition.y - clipboard[0].y1;
+            const offsetIncrement = 10; // Increment offset for each paste
+            const offsetX = mousePosition.x - clipboard[0].x1 + (pasteCount * offsetIncrement);
+            const offsetY = mousePosition.y - clipboard[0].y1 + (pasteCount * offsetIncrement);
             const pastedElements = clipboard.map(element => {
                 const { type, x1, y1, x2, y2, roughElement, points } = element;
                 if (type === ElementType.PAINT_BRUSH) {
@@ -57,10 +59,10 @@ function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUnd
             setRedoStack([]);
             setElements((prev) => {
                 const updatedElements = [...prev, ...pastedElements];
-                console.log('updated elements', updatedElements);
                 return updatedElements;
             });
             setActiveElem(pastedElements);
+            setPasteCount(pasteCount + 1); // Increment paste count after each paste
         }
     };
 
