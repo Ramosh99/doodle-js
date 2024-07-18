@@ -12,8 +12,9 @@ import { FaAngleDown } from "react-icons/fa";
 import { FaPencilAlt } from "react-icons/fa"
 import { HiArrowLongRight } from "react-icons/hi2";
 import { MdOutlineRefresh } from "react-icons/md";
+import ZoomNGrag from './Clicks/ZoomNGrag';
 
-const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
+const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
 
     //shape selector options-----------------------------------------------------------------------
     const [shapeMenu,setShapeMenu] = useState(false); // to show/hide shape menu
@@ -143,6 +144,7 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
             </div>
             
             {/* --- UndoRedo ---- */}
+            <ZoomNGrag zoom={zoom} setZoom={setZoom} setPan={setPan}/>
             <Undoredo 
                 elements={elements} 
                 undoStack={undoStack} 

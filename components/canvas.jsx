@@ -3,13 +3,13 @@ import React, { useEffect, useLayoutEffect, useRef, useState, useSyncExternalSto
 import rough from 'roughjs/bundled/rough.esm';
 import Buttons from './ButtonComponents/Button';
 import Selectors from './selctors';
-import { findElement } from './ButtonComponents/Clicks/Transform';
 import Shapes, { createElement, drawElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
 import Delete from './ButtonComponents/Clicks/Delete';
 import CutCopyPaste from './ButtonComponents/Clicks/CutCopyPaste';
 import { ElementType } from './Types/types';
+// import handleLoad from './ButtonComponents/Clicks/Load';
 
 
 
@@ -53,20 +53,15 @@ const Canvas = () => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    // Update the dimensions state with the window dimensions
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
-
-    // Optional: Handle window resize
     const handleResize = () => {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
     };
-
     window.addEventListener('resize', handleResize);
-
-    // Cleanup function to remove the event listener
     return () => window.removeEventListener('resize', handleResize);
   }, []); // Empty dependency array means this effect runs once on mount
-   //--------to identify whether ctrl is pressed or not
+   
+  //--------to identify whether ctrl is pressed or not
    useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Control') {
@@ -105,18 +100,6 @@ const Canvas = () => {
         elements.forEach(element => drawElement(roughCanvas, element, ctx));
       }, [elements, pan, zoom]);
 
-    useEffect(() => {
-      const panFunction = (e) => {
-        setPan((prevPan) => ({
-          x: prevPan.x - e.deltaX,
-          y: prevPan.y - e.deltaY,
-        }));
-      }
-      document.addEventListener('wheel', panFunction);
-      return () => {
-        document.removeEventListener('wheel', panFunction);
-      };
-    }, []);
 
     const handleMouseDown = (e) => {
       const { clientX, clientY } = e;
@@ -243,13 +226,6 @@ const Canvas = () => {
                
     };
 
-    //------------------------------------------------zooming option--------------------------------
-    // const handleWheel = (e) => {
-    //     const zoomFactor = 1.1;
-    //     const newZoom = e.deltaY < 0 ? zoom * zoomFactor : zoom / zoomFactor;
-    //     setZoom(newZoom);
-    // };
-
     const handleModeChange = (newMode) => {
         setMode(newMode);
     };
@@ -297,6 +273,9 @@ const Canvas = () => {
                 setRedoStack={setRedoStack}
                 elements={elements}
                 setActiveElem={setActiveElem}
+                zoom={zoom}
+                setZoom={setZoom}
+                setPan={setPan}
                 />
             <Color currentSelectedIndex={currentSelectedIndex} elements={elements} setElements={setElements} activeElem={activeElem} setActiveElem={setActiveElem} activeColor={activeColor} setActiveColor={setActiveColor} activeStrokeColor={activeStrokeColor} setActiveStrokeColor={setActiveStrokeColor}></Color>
             <canvas
@@ -359,6 +338,7 @@ const Canvas = () => {
               pan={pan}
               mousePosition={mousePosition}
             />
+            {/* <handleLoad setElements={setElements}/> */}
         </div>
     );
   }
