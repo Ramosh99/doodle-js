@@ -2,18 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'JustMe';
+  src: url('./JustMe.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+textarea{
+  font-family: 'JustMe';
+  border:1px solid #e4f5fa
+}
+
 .selectIcon{
     cursor: pointer;
     font-size:20px;
     padding: 2px;
     border-radius: 2px;
-}
-
-.selectIcon:hover{
-    background-color: #e4f5fa;
-    font-size:20px;
-    border-radius: 2px;
-    padding:2px;
 }
 
 .activeIcon{
@@ -24,14 +29,11 @@
     border-radius: 2px;
 }
 
-.activeIcon:hover{
-  background-color: #e4f5fa;
-}
-
 .toolTipCov{
   position: relative;
   width: 22px;
   height: 22px;
+  border-radius: 4px;
 }
 
 .toolTip{
@@ -47,6 +49,9 @@
   border-radius: 3px;
 }
 
+.toolTipCov:hover{
+  background-color: #e4f5fa;
+}
 .toolTipCov:hover .toolTip{
   display: block;
 }
@@ -56,7 +61,6 @@
     height: 8px;
     background-color: #09ceff;
     position: absolute;
-    
 }
 
 

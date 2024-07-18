@@ -113,6 +113,15 @@ const createElement = {
       return { type: ElementType.PAINT_BRUSH, points:[{x: x1, y: y1}] };
       // return { type: ElementType.PAINT_BRUSH, points };
     },
+    [ElementType.PAINT_BRUSH]: (x1, y1) => {({
+      type: ElementType.PAINT_BRUSH,
+      })
+      return { type: ElementType.PAINT_BRUSH, points:[{x:x1,y:y1}] };
+    },
+    [ElementType.TEXT]:(x1, y1, x2, y2, strokeColor)=>{
+      return {type:ElementType.TEXT,x1,y1,x2,y2}
+    }
+
 
   };
   

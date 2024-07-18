@@ -99,7 +99,7 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
             <div className='toolTipCov'>
                 <RiPaintFill 
                     className='selectIcon'
-                    style={{fontSize:'20px',cursor:'pointer',color:activeColor}} 
+                    style={{fontSize:'20px',cursor:'pointer',borderBottom:`2px solid ${activeColor}`}} 
                     onClick={()=>handleExpanded('fill')}
                 ></RiPaintFill>
                 <p className='toolTip'>Fill</p>
@@ -107,7 +107,7 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
             <div className='toolTipCov'>
                 <MdOutlineBrush 
                     className='selectIcon'
-                    style={{fontSize:'20px',cursor:'pointer',color:activeStrokeColor}}
+                    style={{fontSize:'20px',cursor:'pointer',borderBottom:`2px solid ${activeStrokeColor}`}}
                     onClick={()=>handleExpanded('stroke')}
                 ></MdOutlineBrush>
                 <p className='toolTip'>Stroke</p>

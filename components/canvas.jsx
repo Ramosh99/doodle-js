@@ -10,7 +10,8 @@ import Delete from './ButtonComponents/Clicks/Delete';
 import CutCopyPaste from './ButtonComponents/Clicks/CutCopyPaste';
 import { ElementType } from './Types/types';
 // import handleLoad from './ButtonComponents/Clicks/Load';
-
+import { AddText } from './ButtonComponents/Clicks/Write';
+import Text from './Text';
 
 
 const Canvas = () => {
@@ -260,7 +261,7 @@ const Canvas = () => {
 
     // Check if the point is close enough to the line segment within the tolerance
     return (
-        <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
+        <div style={{ overflow: 'hidden', width: '100vw', height: '100vh' ,position:'relative'}}>
             <Buttons 
                 handleModeChange={handleModeChange} 
                 handleLoad={handleLoad} 
@@ -338,7 +339,11 @@ const Canvas = () => {
               pan={pan}
               mousePosition={mousePosition}
             />
-            {/* <handleLoad setElements={setElements}/> */}
+
+
+            {elements.map((el,ind)=>{
+              return el.type=='text'?<Text key={ind} prop={el}></Text>:''
+            })}
         </div>
     );
   }
