@@ -83,7 +83,7 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
 
   return (
     <div style={{
-        position: 'fixed', top:'10px', right:'20px',
+        position: 'fixed', top:'10px', right:'20px',zIndex:20,
         display:'flex',flexDirection:'column', justifyContent:'space-around', alignItems:'center',
         backgroundColor:'white', borderRadius:'4px',
         boxShadow:'0 0 3px lightGrey',
