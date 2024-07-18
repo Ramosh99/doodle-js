@@ -5,7 +5,10 @@ const ZoomNGrag = ({zoom,setZoom,setPan}) => {
     useEffect(() => {
         const panFunction = (e) => {
           if (e.ctrlKey) {
-            setZoom((prevZoom) => prevZoom + e.deltaY * -0.01);
+            setZoom((prevZoom) => {
+              const newZoom = prevZoom + e.deltaY * -0.01;
+              return Math.min(Math.max(newZoom, 0.25), 2.5); // Clamp newZoom between 0.5 and 2
+            });
           } else {
             setPan((prevPan) => ({
               x: prevPan.x - e.deltaX,
