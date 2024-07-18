@@ -21,7 +21,7 @@ const Canvas = () => {
     const [panning, setPanning] = useState(false);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [mode, setMode] = useState("grab");//active element / current using
+    const [mode, setMode] = useState("select");//active element / current using
     const canvasRef = useRef(null);
 
   const [undoStack, setUndoStack] = useState([]);
@@ -95,19 +95,12 @@ const Canvas = () => {
       useLayoutEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-      
         // Reset the current transformation matrix to the identity matrix
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-      
         // Clear the entire canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
         // Apply new transformations for zoom and pan
-        ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
-      
-        // Now draw the rectangle and other elements
-        ctx.fillRect(0, 0, 500, 300);
-      
+        ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);  
         const roughCanvas = rough.canvas(canvas);
         elements.forEach(element => drawElement(roughCanvas, element, ctx));
       }, [elements, pan, zoom]);

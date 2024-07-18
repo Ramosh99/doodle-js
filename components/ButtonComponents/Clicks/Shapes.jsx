@@ -48,6 +48,7 @@ const createElement = {
     },
     [ElementType.LINE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const roughElement = generator.line(x1, y1, x2, y2, {
+        roughness: 2,
         stroke: strokecolor,
         strokeWidth: 2,
       });
@@ -56,6 +57,8 @@ const createElement = {
     [ElementType.CIRCLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const radius = Math.hypot(x2 - x1, y2 - y1);
       const roughElement = generator.circle(x1, y1, radius * 2, {
+        fillStyle: 'solid', // solid fill
+        roughness: 2,
         fill:fillcolor,
         stroke: strokecolor,
         strokeWidth: 2,
@@ -65,6 +68,8 @@ const createElement = {
     [ElementType.TRIANGLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const roughElement = generator.polygon([[x1, y1], [x2, y2], [(2*x1)-x2, y2], [x1, y1]], {
         fill:fillcolor,
+        fillStyle: 'solid', // solid fill
+        roughness: 2,
         stroke: strokecolor,
         strokeWidth: 2,
       });
@@ -94,6 +99,7 @@ const createElement = {
     ,        
     {
       stroke: strokeColor,
+      roughness: 2,
       strokeWidth: 2,
     }
     );
@@ -102,8 +108,6 @@ const createElement = {
       return { type: ElementType.ARROW, x1, y1, x2, y2, roughElement };
     },
     [ElementType.PAINT_BRUSH]: (x1, y1, points = [{x: x1, y: y1}]) => {
-      // console.log("passing points", points);
-      // console.log("paint brush",  points = [{x: x1, y: y1}]);
       return { type: ElementType.PAINT_BRUSH, points:[{x: x1, y: y1}] };
       // return { type: ElementType.PAINT_BRUSH, points };
     },
