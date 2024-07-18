@@ -50,10 +50,10 @@ const Undoredo = ({elements,undoStack,redoStack,setUndoStack,setRedoStack,setEle
             }}>
 
             {/* --- Undo ---- */}
-            <GrUndo onClick={handleUndo} style={{cursor:'pointer' ,color: undoStack.length === 0 ? 'gray' : 'inherit' }} />
+            <GrUndo className='selectIcon' onClick={handleUndo} style={{cursor:'pointer' ,color: undoStack.length === 0 ? 'gray' : 'inherit' }} />
 
             {/* --- Redo ---- */}
-            <GrRedo onClick={handleRedo} style={{cursor:'pointer' ,color: redoStack.length === 0 ? 'gray' : 'inherit' }} />
+            <GrRedo className='selectIcon' onClick={handleRedo} style={{cursor:'pointer' ,color: redoStack.length === 0 ? 'gray' : 'inherit' }} />
 
         </div>
     );
