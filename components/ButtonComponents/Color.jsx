@@ -96,14 +96,22 @@ export default function Color({currentSelectedIndex,elements,setElements,activeC
                 borderBottom:expanded?'1px solid lightGrey':'',
         }}
         >
-            <RiPaintFill 
-                style={{fontSize:'20px',cursor:'pointer',color:activeColor}} 
-                onClick={()=>handleExpanded('fill')}
-            ></RiPaintFill>
-            <MdOutlineBrush 
-                style={{fontSize:'20px',cursor:'pointer',color:activeStrokeColor}}
-                onClick={()=>handleExpanded('stroke')}
-            ></MdOutlineBrush>
+            <div className='toolTipCov'>
+                <RiPaintFill 
+                    className='selectIcon'
+                    style={{fontSize:'20px',cursor:'pointer',color:activeColor}} 
+                    onClick={()=>handleExpanded('fill')}
+                ></RiPaintFill>
+                <p className='toolTip'>Fill</p>
+            </div>
+            <div className='toolTipCov'>
+                <MdOutlineBrush 
+                    className='selectIcon'
+                    style={{fontSize:'20px',cursor:'pointer',color:activeStrokeColor}}
+                    onClick={()=>handleExpanded('stroke')}
+                ></MdOutlineBrush>
+                <p className='toolTip'>Stroke</p>
+            </div>
     </div>
 
     {/* =================    expanded drop down menu ================ */}
