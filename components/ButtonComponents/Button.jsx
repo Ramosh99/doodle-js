@@ -124,7 +124,6 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
                         setElements([]);
                         setActiveElem([]);
                     }}
-                    
                 />
 
                 {/* --- Save ---- */}
