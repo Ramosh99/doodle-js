@@ -108,6 +108,8 @@ const createElement = {
       return { type: ElementType.ARROW, x1, y1, x2, y2, roughElement };
     },
     [ElementType.PAINT_BRUSH]: (x1, y1, points = [{x: x1, y: y1}]) => {
+      // console.log("passing points", points);
+      // console.log("paint brush",  points = [{x: x1, y: y1}]);
       return { type: ElementType.PAINT_BRUSH, points:[{x: x1, y: y1}] };
       // return { type: ElementType.PAINT_BRUSH, points };
     },
