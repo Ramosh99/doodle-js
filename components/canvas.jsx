@@ -233,29 +233,28 @@ const Canvas = () => {
     
     //File handling------------------------------------------------------------------------------
     const handleLoad = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+      const file = event.target.files[0];
+      if (!file) return;
     
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const json = e.target.result;
-            const loadedElements = JSON.parse(json);
-            console.log(loadedElements);
-            const elementsToSet = loadedElements.flatMap(({ type, x1, y1, x2, y2, roughElement, points }) => {
-                if (type !== ElementType.PAINT_BRUSH) {
-                    return createElement[type](x1, y1, x2, y2, roughElement.options.fill, roughElement.options.stroke);
-                } else {
-                    console.log(type);
-                    return points.map(point => createElement[ElementType.PAINT_BRUSH](point.x, point.y));
-                    // console.log(points.x);
-                }
-            }).filter(element => element !== null);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const json = e.target.result;
+        const loadedElements = JSON.parse(json);
+        console.log(loadedElements);
+        const elementsToSet = loadedElements.flatMap(({ type, x1, y1, x2, y2, roughElement, points }) => {
+          if (type !== ElementType.PAINT_BRUSH) {
+            return createElement[type](x1, y1, x2, y2, roughElement.options.fill, roughElement.options.stroke);
+          } else {
+            return { type: ElementType.PAINT_BRUSH, points }; // Directly return the points
+          }
+        }).filter(element => element !== null);
     
-            setElements(elementsToSet);
-        };
+        setElements(elementsToSet);
+      };
     
-        reader.readAsText(file);
+      reader.readAsText(file);
     };
+    
   
   
   
