@@ -244,30 +244,28 @@ const Canvas = () => {
     
     //File handling------------------------------------------------------------------------------
     const handleLoad = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+      const file = event.target.files[0];
+      if (!file) return;
     
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const json = e.target.result;
-            const loadedElements = JSON.parse(json);
-            console.log(loadedElements);
-            const elementsToSet = loadedElements.flatMap(({ type, x1, y1, x2, y2, roughElement, points }) => {
-                if (type !== ElementType.PAINT_BRUSH) {
-                    return createElement[type](x1, y1, x2, y2, roughElement.options.fill, roughElement.options.stroke);
-                } else {
-                    console.log(type);
-                    return points.map(point => createElement[ElementType.PAINT_BRUSH](point.x, point.y));
-                    // console.log(points.x);
-                }
-            }).filter(element => element !== null);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const json = e.target.result;
+        const loadedElements = JSON.parse(json);
+        console.log(loadedElements);
+        const elementsToSet = loadedElements.flatMap(({ type, x1, y1, x2, y2, roughElement, points }) => {
+          if (type !== ElementType.PAINT_BRUSH) {
+            return createElement[type](x1, y1, x2, y2, roughElement.options.fill, roughElement.options.stroke);
+          } else {
+            return { type: ElementType.PAINT_BRUSH, points }; // Directly return the points
+          }
+        }).filter(element => element !== null);
     
-            setElements(elementsToSet);
-        };
+        setElements(elementsToSet);
+      };
     
-        reader.readAsText(file);
+      reader.readAsText(file);
     };
-  
+    
   
   
 
@@ -296,8 +294,13 @@ const Canvas = () => {
                 // onWheel={handleWheel}
                 width={dimensions.width}
                 height={dimensions.height}
-                style={{ cursor: mode === 'grab' ? 'grab' : mode==='select'?'auto':'crosshair' }}
-            />
+                style={{
+                  cursor: mode === 'grab' ? 'grab' : 
+                          mode === 'select' ? 'auto' : 
+                          mode === 'paint_brush' ? "url('data:image/x-icon;base64,AAACAAEAICAQAAIAAwDoAgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAAAAxJ0AALiTAACefgAAq4kAANuvAADougAAGqsAAJF0AADPpQAAAJ4FAA7PAAAAxc8A/8wAAACRBQCrCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDQAAAAAAAAAAAAAAAAAAINCEAAAAAAAAAAAAAAAAAg0IJAAAAAAAAAAAAAAAACDQgBQAAAAAAAAAAAAAAAINCDAYAAAAAAAAAAAAAAAg0IMBtAAAAAAAAAAAAAACDQgwG0AAAAAAAAAAAAAAINCAAbQAAAAAAAAAAAAAAg0IJVtAAAAAAAAAAAAAACDQgkG0AAAAAAAAAAAAAAINCCQDQAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAOpwCwAAAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAIpwCwAAAAAAAAAAAAAAAAg3ALAAAAAAAAAAAAAAAACDQAsAAAAAAAAAAAAAAAAINACwAAAAAAAAAAAAAAAAg0ALAAAAAAAAAAAAAAAACDQgkAAAAAAAAAAAAAAAAANCCQAAAAAAAAAAAAAAAAA0IZAAAAAAAAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////////4////8H///+A////AP///gD///wA///4AP//8AH//+AD///AB///gA///wAf//4Bv//8A///+Af///AP///gH///wD///4B///8A///+Af///AP///gH///4D///8B////A////h////5///////////////w=='), auto" : 
+                          'crosshair'
+                }}               
+                />
 
             {/* ---- helper selectors around an active element --------------- */}
             {activeElem.length > 0 && mode === 'select' ?
