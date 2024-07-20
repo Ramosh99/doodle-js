@@ -22,6 +22,7 @@ const Canvas = () => {
     const [panning, setPanning] = useState(false);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
+    const [ZoomOffset, setZoomOffset] = useState({ x: 0, y: 0 });
     const [mode, setMode] = useState("select");//active element / current using
     const canvasRef = useRef(null);
 
@@ -95,8 +96,16 @@ const Canvas = () => {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         // Clear the entire canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const scaledWidth = canvas.width * zoom;
+        const scaledHeight = canvas.height * zoom;
+
+        const scaleOffsetX = (scaledWidth - canvas.width) / 2;
+        const scaleOffsetY = (scaledHeight - canvas.height) / 2;
+        
+        setZoomOffset({ x: scaleOffsetX, y: scaleOffsetY });
         // Apply new transformations for zoom and pan
-        ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);  
+        ctx.setTransform(zoom, 0, 0, zoom, pan.x * zoom - scaleOffsetX, pan.y * zoom - scaleOffsetY);  
         const roughCanvas = rough.canvas(canvas);
         elements.forEach(element => drawElement(roughCanvas, element, ctx));
       }, [elements, pan, zoom]);
@@ -104,8 +113,8 @@ const Canvas = () => {
 
     const handleMouseDown = (e) => {
       const { clientX, clientY } = e;
-      const x = clientX - pan.x / zoom;
-      const y = clientY - pan.y / zoom;
+      const x = (clientX - pan.x * zoom + ZoomOffset.x)/zoom;
+      const y = (clientY - pan.y * zoom + ZoomOffset.y)/zoom;
 
       setMousePosition({ x, y });
 
@@ -155,8 +164,8 @@ const Canvas = () => {
     const handleMouseMove = (e) => {
       setIsCtrlPressedCount(isCtrlPressedCount=>isCtrlPressedCount+1);
       const { clientX, clientY } = e;
-      const x = clientX - pan.x / zoom;
-      const y = clientY - pan.y / zoom;
+      const x = (clientX - pan.x * zoom + ZoomOffset.x)/zoom;
+      const y = (clientY - pan.y * zoom + ZoomOffset.y)/zoom;
 
         if (panning) {
           setPan((prevPan) => ({
@@ -227,7 +236,7 @@ const Canvas = () => {
         
         // ------------------------------- maintaining x1<x1 & y1<y2 ----------------------
         const element = elements[elements.length-1];
-        if(element.length>0){
+        // if(element.length>=0){
           if(element.type==="rectangle"){
             if(element.x2<element.x1){
               let tmp = element.x1;
@@ -240,7 +249,7 @@ const Canvas = () => {
               element.y2=tmp;
             }
           } 
-        }
+        // }
     };
 
     const handleModeChange = (newMode) => {
@@ -328,6 +337,7 @@ const Canvas = () => {
       setResizingPoint={setResizingPoint}
       activeElem={activeElem}
       shape={element}
+      ZoomOffset={ZoomOffset}
     />
   ))
   : ''
