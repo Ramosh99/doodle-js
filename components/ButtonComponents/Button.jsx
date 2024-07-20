@@ -36,7 +36,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
     return (
         <>
             <div style={{ 
-                position: 'fixed', top:'10px', left:'20px',
+                position: 'fixed', top:'10px', left:'20px',zIndex:20,
                 display:'flex', justifyContent:'space-around', alignItems:'center',
                 width:'420px', height:'30px', backgroundColor:'white', borderRadius:'4px',
                 boxShadow:'0 0 3px lightGrey',

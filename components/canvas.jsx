@@ -113,7 +113,7 @@ const Canvas = () => {
             setPanning(true);
             return;
         }else if(mode === 'select'){
-
+              console.log(elements);
             selectTheShapeMouseDown(
               parseInt(x), 
               parseInt(y),
@@ -146,8 +146,8 @@ const Canvas = () => {
 
         setDrawing(true);
 
-        const element = createElement[mode](x, y, x, y,activeColor,activeStrokeColor);
-        
+        let element = createElement[mode](x, y, x, y,activeColor,activeStrokeColor);
+
         setElements((prev) => [...prev, element]);
   
     };
@@ -224,7 +224,21 @@ const Canvas = () => {
             activeStrokeColor
           );
         }
-               
+        
+        const element = elements[elements.length-1];
+// ------------------------------- maintaining x1<x1 & y1<y2 ----------------------
+        if(element.type==="rectangle"){
+          if(element.x2<element.x1){
+            let tmp = element.x1;
+            element.x1=element.x2;
+            element.x2=tmp;
+          }
+          if(element.y2<element.y1){
+            let tmp = element.y1;
+            element.y1=element.y2;
+            element.y2=tmp;
+          }
+        } 
     };
 
     const handleModeChange = (newMode) => {
@@ -288,6 +302,7 @@ const Canvas = () => {
                 width={dimensions.width}
                 height={dimensions.height}
                 style={{
+                  position:'fixed',
                   cursor: mode === 'grab' ? 'grab' : 
                           mode === 'select' ? 'auto' : 
                           mode === 'paint_brush' ? "url('data:image/x-icon;base64,AAACAAEAICAQAAIAAwDoAgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAAAAxJ0AALiTAACefgAAq4kAANuvAADougAAGqsAAJF0AADPpQAAAJ4FAA7PAAAAxc8A/8wAAACRBQCrCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDQAAAAAAAAAAAAAAAAAAINCEAAAAAAAAAAAAAAAAAg0IJAAAAAAAAAAAAAAAACDQgBQAAAAAAAAAAAAAAAINCDAYAAAAAAAAAAAAAAAg0IMBtAAAAAAAAAAAAAACDQgwG0AAAAAAAAAAAAAAINCAAbQAAAAAAAAAAAAAAg0IJVtAAAAAAAAAAAAAACDQgkG0AAAAAAAAAAAAAAINCCQDQAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAOpwCwAAAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAIpwCwAAAAAAAAAAAAAAAAg3ALAAAAAAAAAAAAAAAACDQAsAAAAAAAAAAAAAAAAINACwAAAAAAAAAAAAAAAAg0ALAAAAAAAAAAAAAAAACDQgkAAAAAAAAAAAAAAAAANCCQAAAAAAAAAAAAAAAAA0IZAAAAAAAAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////////4////8H///+A////AP///gD///wA///4AP//8AH//+AD///AB///gA///wAf//4Bv//8A///+Af///AP///gH///wD///4B///8A///+Af///AP///gH///4D///8B////A////h////5///////////////w=='), auto" : 

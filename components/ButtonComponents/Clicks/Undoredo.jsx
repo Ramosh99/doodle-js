@@ -43,7 +43,7 @@ const Undoredo = ({elements,undoStack,redoStack,setUndoStack,setRedoStack,setEle
    
     return (
         <div style={{ 
-            position: 'fixed', bottom:'10px', left:'20px',
+            position: 'fixed', bottom:'10px', left:'20px',zIndex:20,
             display:'flex',justifyContent:'space-around',alignItems:'center',
             width:'100px',height:'30px',backgroundColor:'white',borderRadius:'4px',
             boxShadow:'0 0 3px lightGrey' 
