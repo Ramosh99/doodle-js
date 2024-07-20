@@ -12,7 +12,8 @@ export default function Selectors({
   setIsDragging,
   pan,
   zoom,
-  shape
+  shape,
+  ZoomOffset
 }) {
   const handleCornerClick = (corner) => {
     // identify resizing points
@@ -43,10 +44,10 @@ export default function Selectors({
 
 
     // Adjust positions according to the current pan and zoom values
-    const adjustedX1 = x1 * zoom + pan.x;
-    const adjustedX2 = x2 * zoom + pan.x;
-    const adjustedY1 = y1 * zoom + pan.y;
-    const adjustedY2 = y2 * zoom + pan.y;
+    const adjustedX1 = x1 * zoom + pan.x * zoom - ZoomOffset.x;
+    const adjustedX2 = x2 * zoom + pan.x * zoom - ZoomOffset.x;
+    const adjustedY1 = y1 * zoom + pan.y * zoom - ZoomOffset.y;
+    const adjustedY2 = y2 * zoom + pan.y * zoom - ZoomOffset.y;
     
   if (type === "rectangle") {
     return (
