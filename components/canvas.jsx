@@ -225,20 +225,22 @@ const Canvas = () => {
           );
         }
         
+        // ------------------------------- maintaining x1<x1 & y1<y2 ----------------------
         const element = elements[elements.length-1];
-// ------------------------------- maintaining x1<x1 & y1<y2 ----------------------
-        if(element.type==="rectangle"){
-          if(element.x2<element.x1){
-            let tmp = element.x1;
-            element.x1=element.x2;
-            element.x2=tmp;
-          }
-          if(element.y2<element.y1){
-            let tmp = element.y1;
-            element.y1=element.y2;
-            element.y2=tmp;
-          }
-        } 
+        if(element.length>0){
+          if(element.type==="rectangle"){
+            if(element.x2<element.x1){
+              let tmp = element.x1;
+              element.x1=element.x2;
+              element.x2=tmp;
+            }
+            if(element.y2<element.y1){
+              let tmp = element.y1;
+              element.y1=element.y2;
+              element.y2=tmp;
+            }
+          } 
+        }
     };
 
     const handleModeChange = (newMode) => {
