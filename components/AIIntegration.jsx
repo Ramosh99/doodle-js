@@ -261,7 +261,21 @@ const AIIntegration = ({ setElements, setActiveElem }) => {
     <>
       <button 
         className="selectIcon"
-        style={{ position: 'absolute', top: '10px', right: '20px', zIndex: 100 }}
+        style={{ 
+          position: 'absolute', 
+          top: '10px', 
+          right: '20px', 
+          zIndex: 100,
+          padding: '8px 16px',
+          backgroundColor: '#4F46E5',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: '500',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        }}
         onClick={() => setShowModal(true)}
       >
         🤖 AI Diagram Generator
