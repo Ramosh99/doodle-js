@@ -66,7 +66,20 @@ const Canvas = () => {
         ctx.setTransform(zoom, 0, 0, zoom, pan.x, pan.y);
         ctx.clearRect(-pan.x, -pan.y, canvas.width / zoom, canvas.height / zoom);
         const roughCanvas = rough.canvas(canvas);
-        elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+        elements.forEach((element) => {
+          if (element.type === 'text') {
+            // Handle text elements separately
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            ctx.save(); // Save the current transformation state
+            ctx.font = `${14/zoom}px Arial`; // Adjust font size based on zoom level
+            ctx.fillStyle = 'black';
+            ctx.fillText(element.text, element.x, element.y);
+            ctx.restore(); // Restore the transformation state
+          } else {
+            roughCanvas.draw(element.roughElement);
+          }
+        });
       }, [elements, pan, zoom]);
 
 
