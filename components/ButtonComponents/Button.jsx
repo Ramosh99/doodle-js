@@ -1,7 +1,7 @@
 // Buttons.js
 import React, { useRef, useState } from 'react';
 import { IoHandLeftOutline } from "react-icons/io5";
-import { RiCircleLine, RiRectangleLine, RiTriangleLine } from "react-icons/ri";
+import { RiArrowDownLine, RiArrowRightLine, RiBrush2Line, RiCircleLine, RiRectangleLine, RiTriangleLine } from "react-icons/ri";
 import { GoCircle, GoDash } from "react-icons/go";
 import { FiSave } from "react-icons/fi";
 import { LuDownload } from "react-icons/lu";
@@ -9,8 +9,13 @@ import { LuMousePointer2 } from "react-icons/lu";
 import Undoredo from './Clicks/Undoredo';
 import { handleSave } from './Clicks/Save'; 
 import { FaAngleDown } from "react-icons/fa";
+import { RiPencilFill } from "react-icons/ri";
+import { PiTextTBold } from "react-icons/pi";
+import { HiArrowLongRight } from "react-icons/hi2";
+import { MdOutlineRefresh } from "react-icons/md";
+import ZoomNGrag from './Clicks/ZoomNGrag';
 
-const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
+const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, handleLoad, mode, undoStack, redoStack, setUndoStack, setRedoStack, setElements,setActiveElem }) => {
 
     //shape selector options-----------------------------------------------------------------------
     const [shapeMenu,setShapeMenu] = useState(false); // to show/hide shape menu
@@ -31,96 +36,131 @@ const Buttons = ({ handleModeChange, elements,canvasRef, handleLoad, mode, undoS
     return (
         <>
             <div style={{ 
-                position: 'absolute', top:'10px', left:'20px',
+                position: 'fixed', top:'10px', left:'20px',zIndex:20,
                 display:'flex', justifyContent:'space-around', alignItems:'center',
-                width:'400px', height:'30px', backgroundColor:'white', borderRadius:'4px',
+                width:'420px', height:'30px', backgroundColor:'white', borderRadius:'4px',
                 boxShadow:'0 0 3px lightGrey',
             }}>
-                {/* --- Mouse Pointer ---- */}
-                <LuMousePointer2 
-                    className={mode === 'select' ? 'activeIcon' : 'selectIcon'} 
-                    onClick={() => handleModeChange('select')}
-                ></LuMousePointer2>
+                {/* --- Select ---- */}
+                <div className='toolTipCov'>
+                    <LuMousePointer2 
+                        className={mode === 'select' ? 'activeIcon' : 'selectIcon'} 
+                        onClick={() => handleModeChange('select')}
+                    ></LuMousePointer2>
+                    <p className='toolTip'>Select</p>
+                </div>
+
 
                 {/* --- Grab ---- */}
-                <IoHandLeftOutline
-                    className={mode === 'grab' ? 'activeIcon' : 'selectIcon'} 
-                    onClick={() => handleModeChange('grab')}
-                >
-                    Grab
-                </IoHandLeftOutline>
-
-
-                {/* =========   Shape selector ==================================== */}
-                <div>
-                    {/*---active shape with drop arrow--------------- */}
-                   <div style={{display:'flex',justifyContent:'center',alignItems:'center'}}>
-                    {activeShape==='rectangle'?                   
-                        <RiRectangleLine 
-                            className={mode === 'rectangle' ? 'activeIcon' : 'selectIcon'} 
-                            onClick={() => handleModeChange('rectangle')}
-                         >
-                        </RiRectangleLine> 
-                        :activeShape==='circle'?
-                        <RiCircleLine
-                            className={mode === 'circle' ? 'activeIcon' : 'selectIcon'}
-                            onClick={() => handleModeChange('circle')}
-                        >
-                        </RiCircleLine>
-                        :activeShape==='triangle'?
-                        <RiTriangleLine 
-                            className={mode === 'triangle' ? 'activeIcon' : 'selectIcon'} 
-                            onClick={() => handleModeChange('triangle')}
-                        >
-                        </RiTriangleLine>
-                        :''}
-                     <FaAngleDown style={{fontSize:'10px',cursor:'pointer'}} onClick={()=>setShapeMenu(!shapeMenu)}></FaAngleDown>  
-                   </div>  
-
-                    {/*----- drop down menu---------------------- */}
-                    {shapeMenu?<div 
-                    className='drop'
-                    style={{
-                        display:'flex',flexDirection:'column',justifyContent:'space-around',alignItems:'center',position:'absolute',top:'25px',
-                        backgroundColor:'white',
-                        borderRadius:'4px',borderTopLeftRadius:'0',borderTopRightRadius:'0',
-                        borderTop:'1px solid lightGrey',
-                        boxShadow:'0px 2px 3px lightGrey',
-                        padding:'5px'
-                        }}>
-                    {activeShape!=='rectangle'?<RiRectangleLine className='selectIconMenu' onClick={()=>handleActiveShape('rectangle')}></RiRectangleLine>:''}
-                    {activeShape!=='circle'?<RiCircleLine className='selectIconMenu' onClick={()=>handleActiveShape('circle')}></RiCircleLine>:''}
-                    {activeShape!=='triangle'?<RiTriangleLine className='selectIconMenu' onClick={()=>handleActiveShape('triangle')}></RiTriangleLine>:''}
-                </div>
-                :''}             
+                <div className='toolTipCov'>
+                    <IoHandLeftOutline
+                        className={mode === 'grab' ? 'activeIcon' : 'selectIcon'} 
+                        onClick={() => handleModeChange('grab')}
+                    ></IoHandLeftOutline>
+                    <p className='toolTip'>hand</p>
                 </div>
 
 
                 {/* --- Line ---- */}
-                <GoDash 
-                    className={mode === 'line' ? 'activeIcon' : 'selectIcon'} 
-                    onClick={() => handleModeChange('line')}
-                >
-                    Line
-                </GoDash>
+                <div className='toolTipCov'>
+                    <GoDash 
+                        className={mode === 'line' ? 'activeIcon' : 'selectIcon'} 
+                        onClick={() => handleModeChange('line')}
+                    ></GoDash>
+                    <p className='toolTip'>Line</p>
+                </div>
+
+
+                {/* --- Arrow ---- */}
+                <div className='toolTipCov'>
+                    <HiArrowLongRight
+                        className={mode === 'arrow' ? 'activeIcon' : 'selectIcon'}
+                        onClick={() => handleModeChange('arrow')}
+                    ></HiArrowLongRight>
+                    <p className='toolTip'>Arrow</p>
+                </div>
+
+                    
+                {/* --- Pencil ---- */}
+                <div className='toolTipCov'>
+                    <RiPencilFill
+                        className={mode === 'paint_brush' ? 'activeIcon' : 'selectIcon'}
+                        onClick={() => handleModeChange('paint_brush')}
+                    ></RiPencilFill>
+                    <p className='toolTip'>Pencil</p>
+                </div>
+
+
+                {/* --- Recatngle ---- */}
+                <div className='toolTipCov'>
+                    <RiRectangleLine 
+                        className={mode === 'rectangle' ? 'activeIcon' : 'selectIcon'} 
+                        onClick={() => handleModeChange('rectangle')}
+                    ></RiRectangleLine>
+                    <p className='toolTip'>Rectangle</p> 
+                </div>
+
+
+                {/* --- Triangle ---- */}
+                <div className='toolTipCov'>
+                    <RiTriangleLine 
+                        className={mode === 'triangle' ? 'activeIcon' : 'selectIcon'} 
+                        onClick={() => handleModeChange('triangle')}
+                    ></RiTriangleLine>
+                    <p className='toolTip'>Triangle</p>
+                </div>
+
+
+                {/* --- Circle ---- */}
+                <div className='toolTipCov'>
+                   <RiCircleLine
+                        className={mode === 'circle' ? 'activeIcon' : 'selectIcon'}
+                        onClick={() => handleModeChange('circle')}
+                    ></RiCircleLine>
+                    <p className='toolTip'>Circle</p>
+                </div>
+
+
+                {/*---- Text ------ */}
+                <div className='toolTipCov'>
+                    <PiTextTBold
+                        className={mode === 'text' ? 'activeIcon' : 'selectIcon'}
+                        onClick={() => handleModeChange('text')}
+                    ></PiTextTBold>
+                    <p className='toolTip'>Text</p>
+                </div>
+
+
+                {/* --- Reset canvas ---- */}
+                <MdOutlineRefresh
+                    className='selectIcon'
+                    onClick={() => {
+                        setElements([]);
+                        setActiveElem([]);
+                    }}
+                />
 
                 {/* --- Save ---- */}
-                <FiSave 
-                    className='selectIcon'
-                    onClick={() => handleSave({elements})}
-                    style={{marginLeft:'100px'}}
-                >
-                    Save
-                </FiSave>
+                <div className='toolTipCov' style={{marginLeft:'60px'}}>
+                    <FiSave 
+                        className='selectIcon'
+                        onClick={() => handleSave({elements})}
+                    ></FiSave>
+                    <p className='toolTip'>Save</p>
+                </div>
 
                 {/* --- Load ---- */}
-                <LuDownload onClick={handleIconClick} className='selectIcon' ></LuDownload>
+                <div className='toolTipCov'>
+                    <LuDownload onClick={handleIconClick} className='selectIcon' ></LuDownload>
+                    <p className='toolTip'>Load</p>
+                </div>
                 {/*---This is hidden--------- triggered by above icon */}
                 <input ref={fileInputRef} type="file" style={{display:'none'}} onChange={handleLoad} />
 
             </div>
             
             {/* --- UndoRedo ---- */}
+            <ZoomNGrag zoom={zoom} setZoom={setZoom} setPan={setPan}/>
             <Undoredo 
                 elements={elements} 
                 undoStack={undoStack} 

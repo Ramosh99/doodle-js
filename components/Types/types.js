@@ -4,8 +4,11 @@ export const ElementType = {
     CIRCLE: 'circle',
     TRIANGLE: 'triangle',
     SQUARE: 'square',
-    ELLIPSE: 'ellipse',
-  };
+    ARROW: 'arrow',
+    PAINT_BRUSH: 'paint_brush',
+    TEXT:'text'
+};
+
   
   
 
@@ -28,5 +31,15 @@ export class Line {
         this.x2 = x2;
         this.y2 = y2;
         this.roughElement = roughElement;
+    }
+}
+
+export class Text{
+    constructor(x1,y1,x2,y2){
+        this.type = ElementType.TEXT;
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;        
     }
 }

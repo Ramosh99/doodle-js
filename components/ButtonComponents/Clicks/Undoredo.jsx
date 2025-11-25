@@ -43,17 +43,17 @@ const Undoredo = ({elements,undoStack,redoStack,setUndoStack,setRedoStack,setEle
    
     return (
         <div style={{ 
-            position: 'absolute', bottom:'10px', left:'20px',
+            position: 'fixed', bottom:'10px', left:'20px',zIndex:20,
             display:'flex',justifyContent:'space-around',alignItems:'center',
             width:'100px',height:'30px',backgroundColor:'white',borderRadius:'4px',
             boxShadow:'0 0 3px lightGrey' 
             }}>
 
             {/* --- Undo ---- */}
-            <GrUndo onClick={handleUndo} style={{cursor:'pointer' ,color: undoStack.length === 0 ? 'gray' : 'inherit' }} />
+            <GrUndo className='selectIcon' onClick={handleUndo} style={{cursor:'pointer' ,color: undoStack.length === 0 ? 'gray' : 'inherit' }} />
 
             {/* --- Redo ---- */}
-            <GrRedo onClick={handleRedo} style={{cursor:'pointer' ,color: redoStack.length === 0 ? 'gray' : 'inherit' }} />
+            <GrRedo className='selectIcon' onClick={handleRedo} style={{cursor:'pointer' ,color: redoStack.length === 0 ? 'gray' : 'inherit' }} />
 
         </div>
     );
