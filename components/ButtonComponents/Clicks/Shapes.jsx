@@ -65,6 +65,18 @@ const createElement = {
       });
       return { type: ElementType.CIRCLE, x1, y1, x2, y2, roughElement };
     },
+    [ElementType.ELLIPSE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
+      const centerX = (x1 + x2) / 2;
+      const centerY = (y1 + y2) / 2;
+      const width = Math.abs(x2 - x1);
+      const height = Math.abs(y2 - y1);
+      const roughElement = generator.ellipse(centerX, centerY, width, height, {
+        fill:fillcolor,
+        stroke: strokecolor,
+        strokeWidth: 2,
+      });
+      return { type: ElementType.ELLIPSE, x1, y1, x2, y2, roughElement };
+    },
     [ElementType.TRIANGLE]: (x1, y1, x2, y2,fillcolor,strokecolor) => {
       const roughElement = generator.polygon([[x1, y1], [x2, y2], [(2*x1)-x2, y2], [x1, y1]], {
         fill:fillcolor,
