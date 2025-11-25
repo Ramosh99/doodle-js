@@ -4,6 +4,7 @@ export const ElementType = {
     CIRCLE: 'circle',
     TRIANGLE: 'triangle',
     SQUARE: 'square',
+    ELLIPSE: 'ellipse',
   };
   
   

@@ -7,6 +7,7 @@ import { findElement } from './ButtonComponents/Clicks/Transform';
 import Shapes, { createElement } from './ButtonComponents/Clicks/Shapes';
 import { selectTheShapeMove,selectTheShapeMouseDown,selectTheShapeMouseUp } from './ButtonComponents/Clicks/Move';
 import Color from './ButtonComponents/Color';
+import AIIntegration from './AIIntegration';
 
 
 
@@ -227,6 +228,7 @@ const Canvas = () => {
                 ></Selectors>
             :''}
             <Shapes elements={elements} handleModeChange={handleModeChange}></Shapes>
+            <AIIntegration setElements={setElements} setActiveElem={setActiveElem}></AIIntegration>
         </div>
     );
   }
