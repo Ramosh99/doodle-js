@@ -44,6 +44,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Select ---- */}
                 <div className='toolTipCov'>
                     <LuMousePointer2 
+                        id="btn-select"
                         className={mode === 'select' ? 'activeIcon' : 'selectIcon'} 
                         onClick={() => handleModeChange('select')}
                     ></LuMousePointer2>
@@ -54,6 +55,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Grab ---- */}
                 <div className='toolTipCov'>
                     <IoHandLeftOutline
+                        id="btn-grab"
                         className={mode === 'grab' ? 'activeIcon' : 'selectIcon'} 
                         onClick={() => handleModeChange('grab')}
                     ></IoHandLeftOutline>
@@ -64,6 +66,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Line ---- */}
                 <div className='toolTipCov'>
                     <GoDash 
+                        id="btn-line"
                         className={mode === 'line' ? 'activeIcon' : 'selectIcon'} 
                         onClick={() => handleModeChange('line')}
                     ></GoDash>
@@ -74,6 +77,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Arrow ---- */}
                 <div className='toolTipCov'>
                     <HiArrowLongRight
+                        id="btn-arrow"
                         className={mode === 'arrow' ? 'activeIcon' : 'selectIcon'}
                         onClick={() => handleModeChange('arrow')}
                     ></HiArrowLongRight>
@@ -84,6 +88,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Pencil ---- */}
                 <div className='toolTipCov'>
                     <RiPencilFill
+                        id="btn-pencil"
                         className={mode === 'paint_brush' ? 'activeIcon' : 'selectIcon'}
                         onClick={() => handleModeChange('paint_brush')}
                     ></RiPencilFill>
@@ -94,6 +99,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Recatngle ---- */}
                 <div className='toolTipCov'>
                     <RiRectangleLine 
+                        id="btn-rectangle"
                         className={mode === 'rectangle' ? 'activeIcon' : 'selectIcon'} 
                         onClick={() => handleModeChange('rectangle')}
                     ></RiRectangleLine>
@@ -104,6 +110,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Triangle ---- */}
                 <div className='toolTipCov'>
                     <RiTriangleLine 
+                        id="btn-triangle"
                         className={mode === 'triangle' ? 'activeIcon' : 'selectIcon'} 
                         onClick={() => handleModeChange('triangle')}
                     ></RiTriangleLine>
@@ -114,6 +121,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Circle ---- */}
                 <div className='toolTipCov'>
                    <RiCircleLine
+                        id="btn-circle"
                         className={mode === 'circle' ? 'activeIcon' : 'selectIcon'}
                         onClick={() => handleModeChange('circle')}
                     ></RiCircleLine>
@@ -124,6 +132,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/*---- Text ------ */}
                 <div className='toolTipCov'>
                     <PiTextTBold
+                        id="btn-text"
                         className={mode === 'text' ? 'activeIcon' : 'selectIcon'}
                         onClick={() => handleModeChange('text')}
                     ></PiTextTBold>
@@ -133,6 +142,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
 
                 {/* --- Reset canvas ---- */}
                 <MdOutlineRefresh
+                    id="btn-reset"
                     className='selectIcon'
                     onClick={() => {
                         setElements([]);
@@ -143,6 +153,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
                 {/* --- Save ---- */}
                 <div className='toolTipCov' style={{marginLeft:'60px'}}>
                     <FiSave 
+                        id="btn-save"
                         className='selectIcon'
                         onClick={() => handleSave({elements})}
                     ></FiSave>
@@ -151,7 +162,7 @@ const Buttons = ({ zoom,setZoom,setPan,handleModeChange, elements,canvasRef, han
 
                 {/* --- Load ---- */}
                 <div className='toolTipCov'>
-                    <LuDownload onClick={handleIconClick} className='selectIcon' ></LuDownload>
+                    <LuDownload id="btn-load" onClick={handleIconClick} className='selectIcon' ></LuDownload>
                     <p className='toolTip'>Load</p>
                 </div>
                 {/*---This is hidden--------- triggered by above icon */}

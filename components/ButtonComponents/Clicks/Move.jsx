@@ -126,6 +126,27 @@ const isMouseOnArrow = (px, py, x1, y1, x2, y2, threshold = 5) => {
 
 
 
+function isMouseOnEllipse(pointX, pointY, shape) {
+  const { x1, y1, x2, y2 } = shape;
+  const h = (x1 + x2) / 2;
+  const k = (y1 + y2) / 2;
+  const a = Math.abs(x2 - x1) / 2 || 1;
+  const b = Math.abs(y2 - y1) / 2 || 1;
+  return ((pointX - h) ** 2) / (a ** 2) + ((pointY - k) ** 2) / (b ** 2) <= 1.25;
+}
+
+function isMouseOnPaintBrush(x, y, shape) {
+  if (!shape.points || shape.points.length === 0) return false;
+  for (let i = 0; i < shape.points.length - 1; i++) {
+    const p1 = shape.points[i];
+    const p2 = shape.points[i + 1];
+    if (isMouseOnLineSegment(x, y, p1.x, p1.y, p2.x, p2.y, 15)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 //for identify mouse click is inside the shape
 export function isMouseInShape(x, y, shape) {
   if (shape.type == "rectangle") {
@@ -135,21 +156,29 @@ export function isMouseInShape(x, y, shape) {
   }
   else if(shape.type=="circle")
   {
-   
     return isMouseOnCircle(x,y,shape);
   }
   else if(shape.type=="triangle")
-    {
-     
+  {
      return isMouseOnTriangle(x,y,shape);
-    }
-    else if(shape.type=="arrow")
-      {
-       
-       return isMouseOnArrow(x,y,shape.x1,shape.y1,shape.x2,shape.y2);
-      }
-      
-    
+  }
+  else if(shape.type=="arrow")
+  {
+     return isMouseOnArrow(x,y,shape.x1,shape.y1,shape.x2,shape.y2);
+  }
+  else if(shape.type=="ellipse")
+  {
+     return isMouseOnEllipse(x, y, shape);
+  }
+  else if(shape.type=="text")
+  {
+     return isMouseOnRectangle(x, y, shape);
+  }
+  else if(shape.type=="paint_brush")
+  {
+     return isMouseOnPaintBrush(x, y, shape);
+  }
+  return false;
 }
 
 function distanceToLineSegment(x, y, x1, y1, x2, y2) {
@@ -177,7 +206,7 @@ function distanceToLineSegment(x, y, x1, y1, x2, y2) {
 
 // Calculate the minimum distance from a point to any line segment of the shape
 function minDistanceToShape(x, y, shape) {
-  if (shape.type === "rectangle") {
+  if (shape.type === "rectangle" || shape.type === "text" || shape.type === "ellipse") {
     const distances = [
       distanceToLineSegment(x, y, shape.x1, shape.y1, shape.x2, shape.y1),
       distanceToLineSegment(x, y, shape.x2, shape.y1, shape.x2, shape.y2),
@@ -185,8 +214,15 @@ function minDistanceToShape(x, y, shape) {
       distanceToLineSegment(x, y, shape.x1, shape.y2, shape.x1, shape.y1),
     ];
     return Math.min(...distances);
-  } else if (shape.type === "line") {
+  } else if (shape.type === "line" || shape.type === "arrow") {
     return distanceToLineSegment(x, y, shape.x1, shape.y1, shape.x2, shape.y2);
+  } else if (shape.type === "paint_brush" && shape.points && shape.points.length > 0) {
+    let minD = Infinity;
+    for (let i = 0; i < shape.points.length; i++) {
+      const d = Math.hypot(x - shape.points[i].x, y - shape.points[i].y);
+      if (d < minD) minD = d;
+    }
+    return minD;
   }
   return Infinity;
 }
@@ -242,21 +278,18 @@ export function selectTheShapeMouseDown(
     }
     else{
       setActiveElem([elements[closestIndex]]);
-
     }
     
-    console.log("selected",elements[closestIndex].roughElement.options.stroke);
-    if (elements[closestIndex].type === "rectangle" && resizingPoint) {
+    if (resizingPoint) {
       setIsResizing(true);
+      setIsDragging(false);
     }
   } else {
     setIsDragging(false);
     if(!isCtrlPressed)
     {
       setActiveElem([]);
-
     }
-   
   }
 }
 
@@ -773,6 +806,127 @@ export const updateShapeCordinates = (
           elements[index].roughElement.options.stroke,
         elements[index].type
       );
+    }
+  }
+  else if (elements[index].type == "ellipse") {
+    if (!isDragging && isResizing) {
+      let newX1 = elements[index].x1;
+      let newY1 = elements[index].y1;
+      let newX2 = elements[index].x2;
+      let newY2 = elements[index].y2;
+      
+      if (resizingPoint === "topleft") {
+        newX1 = newX1;
+        newY1 = newY1;
+      } else if (resizingPoint === "topmiddle") {
+        newY1 = newY1;
+      } else if (resizingPoint === "topright") {
+        newX2 = newX1;
+        newY1 = newY1;
+      } else if (resizingPoint === "bottomleft") {
+        newX1 = newX1;
+        newY2 = newY1;
+      } else if (resizingPoint === "bottommiddle") {
+        newY2 = newY1;
+      } else if (resizingPoint === "bottomright") {
+        newX2 = newX1;
+        newY2 = newY1;
+      } else if (resizingPoint === "leftmiddle") {
+        newX1 = newX1;
+      } else if (resizingPoint === "rightmiddle") {
+        newX2 = newX1;
+      }
+
+      updateRealCordinates(
+        newX1,
+        newY1,
+        newX2,
+        newY2,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+        elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
+    } else {
+      updateRealCordinates(
+        newX1,
+        newY1,
+        newx2,
+        newy2,
+        setActiveElem,
+        setElements,
+        index,
+        elements,
+        elements[index].roughElement.options.fill,
+        elements[index].roughElement.options.stroke,
+        elements[index].type
+      );
+    }
+  }
+  else if (elements[index].type == "text") {
+    const oldText = elements[index].text;
+    const newElements = [...elements];
+    let updatedTextElement;
+    if (!isDragging && isResizing) {
+      let newX1 = elements[index].x1;
+      let newY1 = elements[index].y1;
+      let newX2 = elements[index].x2;
+      let newY2 = elements[index].y2;
+      
+      if (resizingPoint === "topleft") { newX1 = newX1; newY1 = newY1; }
+      else if (resizingPoint === "topmiddle") { newY1 = newY1; }
+      else if (resizingPoint === "topright") { newX2 = newX1; newY1 = newY1; }
+      else if (resizingPoint === "bottomleft") { newX1 = newX1; newY2 = newY1; }
+      else if (resizingPoint === "bottommiddle") { newY2 = newY1; }
+      else if (resizingPoint === "bottomright") { newX2 = newX1; newY2 = newY1; }
+      else if (resizingPoint === "leftmiddle") { newX1 = newX1; }
+      else if (resizingPoint === "rightmiddle") { newX2 = newX1; }
+
+      updatedTextElement = {
+        ...elements[index],
+        x1: newX1,
+        y1: newY1,
+        x2: newX2,
+        y2: newY2,
+        text: oldText
+      };
+    } else {
+      updatedTextElement = {
+        ...elements[index],
+        x1: newX1,
+        y1: newY1,
+        x2: newx2,
+        y2: newy2,
+        text: oldText
+      };
+    }
+    newElements[index] = updatedTextElement;
+    setActiveElem([updatedTextElement]);
+    setElements(newElements);
+  }
+  else if (elements[index].type == "paint_brush") {
+    if (isDragging) {
+      const dx = newX1 - elements[index].x1;
+      const dy = newY1 - elements[index].y1;
+      const translatedPoints = elements[index].points.map(pt => ({
+        x: pt.x + dx,
+        y: pt.y + dy
+      }));
+      const newElements = [...elements];
+      const updatedBrushElement = {
+        ...elements[index],
+        x1: newX1,
+        y1: newY1,
+        x2: newx2,
+        y2: newy2,
+        points: translatedPoints
+      };
+      newElements[index] = updatedBrushElement;
+      setActiveElem([updatedBrushElement]);
+      setElements(newElements);
     }
   }
 };

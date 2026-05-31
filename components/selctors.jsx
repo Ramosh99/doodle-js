@@ -15,7 +15,8 @@ export default function Selectors({
   shape,
   ZoomOffset
 }) {
-  const handleCornerClick = (corner) => {
+  const handleCornerClick = (e, corner) => {
+    e.stopPropagation();
     // identify resizing points
     setResizingPoint(corner);
     setIsResizing(true);
@@ -49,56 +50,56 @@ export default function Selectors({
     const adjustedY1 = y1 * zoom + pan.y * zoom - ZoomOffset.y;
     const adjustedY2 = y2 * zoom + pan.y * zoom - ZoomOffset.y;
     
-  if (type === "rectangle") {
+  if (type === "rectangle" || type === "ellipse" || type === "text") {
     return (
       <div>
         <div
           className="selectors scale-cursorTL"
           id="TL"
           style={{ top: `${adjustedY1 - 4}px`, left: `${adjustedX1 - 4}px` }}
-          onMouseDown={() => handleCornerClick("topleft")}
+          onMouseDown={(e) => handleCornerClick(e, "topleft")}
         ></div>
         <div
           className="selectors scale-cursorTM"
           id="TM"
           style={{ top: `${adjustedY1 - 4}px`, left: `${adjustedX1 + (adjustedX2 - adjustedX1) / 2 - 4}px` }}
-          onMouseDown={() => handleCornerClick("topmiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "topmiddle")}
         ></div>
         <div
           className="selectors scale-cursorTR"
           id="TR"
           style={{ top: `${adjustedY1 - 4}px`, left: `${adjustedX2 - 4}px` }}
-          onMouseDown={() => handleCornerClick("topright")}
+          onMouseDown={(e) => handleCornerClick(e, "topright")}
         ></div>
         <div
           className="selectors scale-cursorBL"
           id="BL"
           style={{ top: `${adjustedY2 - 4}px`, left: `${adjustedX1 - 4}px` }}
-          onMouseDown={() => handleCornerClick("bottomleft")}
+          onMouseDown={(e) => handleCornerClick(e, "bottomleft")}
         ></div>
         <div
           className="selectors scale-cursorBM"
           id="BM"
           style={{ top: `${adjustedY2 - 4}px`, left: `${adjustedX1 + (adjustedX2 - adjustedX1) / 2 - 4}px` }}
-          onMouseDown={() => handleCornerClick("bottommiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "bottommiddle")}
         ></div>
         <div
           className="selectors scale-cursorBR"
           id="BR"
           style={{ top: `${adjustedY2 - 4}px`, left: `${adjustedX2 - 4}px` }}
-          onMouseDown={() => handleCornerClick("bottomright")}
+          onMouseDown={(e) => handleCornerClick(e, "bottomright")}
         ></div>
         <div
           className="selectors scale-cursorLM"
           id="LM"
           style={{ top: `${adjustedY1 + (adjustedY2 - adjustedY1) / 2 - 4}px`, left: `${adjustedX1 - 4}px` }}
-          onMouseDown={() => handleCornerClick("leftmiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "leftmiddle")}
         ></div>
         <div
           className="selectors scale-cursorRM"
           id="RM"
           style={{ top: `${adjustedY1 + (adjustedY2 - adjustedY1) / 2 - 4}px`, left: `${adjustedX2 - 4}px` }}
-          onMouseDown={() => handleCornerClick("rightmiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "rightmiddle")}
         ></div>
       </div>
     );
@@ -109,13 +110,13 @@ export default function Selectors({
           className="selectors scaleline"
           id="start"
           style={{ top: `${adjustedY1 - 4}px`, left: `${adjustedX1 - 4}px` }}
-          onMouseDown={() => handleCornerClick("starting")}
+          onMouseDown={(e) => handleCornerClick(e, "starting")}
         ></div>
         <div
           className="selectors scaleline"
           id="end"
           style={{ top: `${adjustedY2 - 4}px`, left: `${adjustedX2 - 4}px` }}
-          onMouseDown={() => handleCornerClick("ending")}
+          onMouseDown={(e) => handleCornerClick(e, "ending")}
         ></div>
       </div>
     );
@@ -145,49 +146,49 @@ export default function Selectors({
           className="selectors scale-cursorTL"
           id="TL"
           style={{ top: `${points.topLeft.y - 4}px`, left: `${points.topLeft.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("topleft")}
+          onMouseDown={(e) => handleCornerClick(e, "topleft")}
         ></div>
         <div
           className="selectors scale-cursorTM"
           id="TM"
           style={{ top: `${points.topMiddle.y - 4}px`, left: `${points.topMiddle.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("topmiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "topmiddle")}
         ></div>
         <div
           className="selectors scale-cursorTR"
           id="TR"
           style={{ top: `${points.topRight.y - 4}px`, left: `${points.topRight.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("topright")}
+          onMouseDown={(e) => handleCornerClick(e, "topright")}
         ></div>
         <div
           className="selectors scale-cursorLM"
           id="LM"
           style={{ top: `${points.middleLeft.y - 4}px`, left: `${points.middleLeft.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("leftmiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "leftmiddle")}
         ></div>
         <div
           className="selectors scale-cursorRM"
           id="RM"
           style={{ top: `${points.middleRight.y - 4}px`, left: `${points.middleRight.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("rightmiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "rightmiddle")}
         ></div>
         <div
           className="selectors scale-cursorBL"
           id="BL"
           style={{ top: `${points.bottomLeft.y - 4}px`, left: `${points.bottomLeft.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("bottomleft")}
+          onMouseDown={(e) => handleCornerClick(e, "bottomleft")}
         ></div>
         <div
           className="selectors scale-cursorBM"
           id="BM"
           style={{ top: `${points.bottomMiddle.y - 4}px`, left: `${points.bottomMiddle.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("bottommiddle")}
+          onMouseDown={(e) => handleCornerClick(e, "bottommiddle")}
         ></div>
         <div
           className="selectors scale-cursorBR"
           id="BR"
           style={{ top: `${points.bottomRight.y - 4}px`, left: `${points.bottomRight.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("bottomright")}
+          onMouseDown={(e) => handleCornerClick(e, "bottomright")}
         ></div>
   
         {/* Lines connecting the points */}
@@ -198,7 +199,7 @@ export default function Selectors({
             left: `${points.topLeft.x}px`,
             width: `${2 * adjustedRadius}px`,
             height: "1px",
-            backgroundColor: "blue",
+            backgroundColor: "rgba(9, 206, 255, 0.4)",
           }}
         ></div>
         <div
@@ -208,7 +209,7 @@ export default function Selectors({
             left: `${points.topRight.x}px`,
             width: "1px",
             height: `${2 * adjustedRadius}px`,
-            backgroundColor: "blue",
+            backgroundColor: "rgba(9, 206, 255, 0.4)",
           }}
         ></div>
         <div
@@ -218,7 +219,7 @@ export default function Selectors({
             left: `${points.bottomLeft.x}px`,
             width: `${2 * adjustedRadius}px`,
             height: "1px",
-            backgroundColor: "blue",
+            backgroundColor: "rgba(9, 206, 255, 0.4)",
           }}
         ></div>
         <div
@@ -228,14 +229,13 @@ export default function Selectors({
             left: `${points.topLeft.x}px`,
             width: "1px",
             height: `${2 * adjustedRadius}px`,
-            backgroundColor: "blue",
+            backgroundColor: "rgba(9, 206, 255, 0.4)",
           }}
         ></div>
       </div>
     );
   }
   else if (type === "triangle") {
-    // Calculate triangle's points and adjust for zoom and pan
     const points = {
       pointA: { x: adjustedX1, y: adjustedY1 },
       pointB: { x: adjustedX2, y: adjustedY2 },
@@ -244,25 +244,20 @@ export default function Selectors({
 
     return (
       <div>
-        {/* Selector for point A */}
         <div
           className="selectors scale-cursorA"
           style={{ top: `${points.pointA.y - 4}px`, left: `${points.pointA.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("pointA")}
+          onMouseDown={(e) => handleCornerClick(e, "pointA")}
         ></div>
-
-        {/* Selector for point B */}
         <div
           className="selectors scale-cursorB"
           style={{ top: `${points.pointB.y - 4}px`, left: `${points.pointB.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("pointB")}
+          onMouseDown={(e) => handleCornerClick(e, "pointB")}
         ></div>
-
-        {/* Selector for point C */}
         <div
           className="selectors scale-cursorC"
           style={{ top: `${points.pointC.y - 4}px`, left: `${points.pointC.x - 4}px` }}
-          onMouseDown={() => handleCornerClick("pointC")}
+          onMouseDown={(e) => handleCornerClick(e, "pointC")}
         ></div>
       </div>
     );
@@ -274,15 +269,43 @@ export default function Selectors({
           className="selectors scaleline"
           id="start"
           style={{ top: `${adjustedY1 - 4}px`, left: `${adjustedX1 - 4}px` }}
-          onMouseDown={() => handleCornerClick("starting")}
+          onMouseDown={(e) => handleCornerClick(e, "starting")}
         ></div>
         <div
           className="selectors scaleline"
           id="end"
           style={{ top: `${adjustedY2 - 4}px`, left: `${adjustedX2 - 4}px` }}
-          onMouseDown={() => handleCornerClick("ending")}
+          onMouseDown={(e) => handleCornerClick(e, "ending")}
         ></div>
       </div>
+    );
+  }
+  else if (type === "paint_brush" && shape.points && shape.points.length > 0) {
+    const xs = shape.points.map(p => p.x);
+    const ys = shape.points.map(p => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const adjustedMinX = minX * zoom + pan.x * zoom - ZoomOffset.x;
+    const adjustedMaxX = maxX * zoom + pan.x * zoom - ZoomOffset.x;
+    const adjustedMinY = minY * zoom + pan.y * zoom - ZoomOffset.y;
+    const adjustedMaxY = maxY * zoom + pan.y * zoom - ZoomOffset.y;
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          top: `${adjustedMinY - 4}px`,
+          left: `${adjustedMinX - 4}px`,
+          width: `${adjustedMaxX - adjustedMinX + 8}px`,
+          height: `${adjustedMaxY - adjustedMinY + 8}px`,
+          border: "1.5px dashed #09ceff",
+          borderRadius: "4px",
+          pointerEvents: "none",
+        }}
+      ></div>
     );
   }
   return null;

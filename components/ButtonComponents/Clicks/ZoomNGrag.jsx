@@ -35,6 +35,7 @@ const ZoomNGrag = ({ zoom, setZoom, setPan }) => {
   return (
   <>
      <button
+  id="btn-zoom-out"
   style={{ 
     position: 'fixed', bottom: '10px', left: '150px', zIndex: 20,
     display: 'flex', justifyContent: 'space-around', alignItems: 'center',
@@ -54,11 +55,12 @@ const ZoomNGrag = ({ zoom, setZoom, setPan }) => {
     width: '60px', height: '30px', backgroundColor: 'white', borderRadius: '4px',
     boxShadow: '0 0 3px lightGrey' 
 }}>  
-    <span>
+    <span id="lbl-zoom-level">
     {`${Math.round(zoom * 100)}%`}
     </span>
 </div>
 <button
+  id="btn-zoom-in"
   style={{ 
     position: 'fixed', bottom: '10px', left: '250px', zIndex: 20,
     display: 'flex', justifyContent: 'space-around', alignItems: 'center',

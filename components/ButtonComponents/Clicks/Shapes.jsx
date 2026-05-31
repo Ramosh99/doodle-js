@@ -1,6 +1,5 @@
 import rough from 'roughjs/bundled/rough.esm';
 import { ElementType, Rectangle, Line } from '../../Types/types';
-import { useEffect } from 'react';
 import { getSvgPathFromStroke } from '@/app/drawio/utils';
 import getStroke from "perfect-freehand";
 
@@ -139,50 +138,7 @@ const createElement = {
   
   
 
-  const Shapes = ({ handleModeChange, elements }) => {
-    useEffect(() => {
-      const handleKeyDown = (e) => {
-        switch (e.key) {
-          case 'r':
-            e.preventDefault();
-            handleModeChange(ElementType.RECTANGLE);
-            break;
-          case 'l':
-            e.preventDefault();
-            handleModeChange(ElementType.LINE);
-            break;
-          case 'h':
-            e.preventDefault();
-            handleModeChange('grab');
-            break;
-          case 'v':
-            e.preventDefault();
-            handleModeChange('select');
-            break;
-          case 'o':
-            e.preventDefault();
-            handleModeChange(ElementType.CIRCLE);
-            break;
-          case 't':
-            e.preventDefault();
-            handleModeChange(ElementType.TRIANGLE);
-            break;
-          case 's':
-            e.preventDefault();
-            handleModeChange(ElementType.SQUARE);
-            break;
-          default:
-            break;
-        }
-      };
-  
-      window.addEventListener('keydown', handleKeyDown);
-  
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }, [elements]);
-  
+  const Shapes = () => {
     return null;
   };
   

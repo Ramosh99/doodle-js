@@ -1,26 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { createElement } from './Shapes';
 import { ElementType } from '../../Types/types';
 
 function CutCopyPaste({ elements, activeElem, setElements, setActiveElem, setUndoStack, setRedoStack, clipboard, setClipboard, mousePosition }) {
     const [pasteCount, setPasteCount] = useState(0);
-
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.ctrlKey && e.key === 'c') {
-                copyElements();
-            } else if (e.ctrlKey && e.key === 'x') {
-                cutElements();
-            } else if (e.ctrlKey && e.key === 'v') {
-                pasteElements();
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [activeElem, clipboard, elements, mousePosition]);
 
     const copyElements = () => {
         if (activeElem.length > 0) {

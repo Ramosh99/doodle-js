@@ -9,39 +9,72 @@ const AIIntegration = ({ setElements, setActiveElem }) => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Function to generate a use case diagram based on the prompt
+  const normalizeName = (value) => String(value || '').trim();
+  const normalizeNameKey = (value) => normalizeName(value).toLowerCase();
+
+  const isErPrompt = (value) => {
+    const normalized = String(value || '').toLowerCase();
+    return (
+      normalized.includes(' er ') ||
+      normalized.startsWith('er ') ||
+      normalized.includes('er diagram') ||
+      normalized.includes('entity relationship') ||
+      normalized.includes('entity-relationship')
+    );
+  };
+
+  // Generate diagram based on the prompt and model response
   const generateUseCaseDiagram = async () => {
     if (!prompt.trim()) return;
     
     setIsLoading(true);
+    setErrorMessage('');
     
     try {
-      // This is a mock implementation - in a real application, you would connect to an AI API
-      // For now, I'll generate a simple use case diagram based on common patterns
-      const diagramElements = generateUseCaseElements(prompt);
+      const generationResult = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt })
+      });
+
+      if (!generationResult.ok) {
+        const payload = await generationResult.json().catch(() => ({}));
+        throw new Error(payload.error || 'Unable to generate diagram right now.');
+      }
+
+      const payload = await generationResult.json();
+      const wantsErDiagram = isErPrompt(prompt) || payload.diagramType === 'er';
+      const diagramElements = wantsErDiagram
+        ? generateErElements(
+            payload.entities?.length ? payload.entities : fallbackErEntities(prompt),
+            payload.relationships?.length ? payload.relationships : fallbackErRelationships(prompt)
+          )
+        : generateUseCaseElements(
+            payload.actors?.length ? payload.actors : extractActors(prompt),
+            payload.useCases?.length ? payload.useCases : extractUseCases(prompt)
+          );
+
       setElements(diagramElements);
       setActiveElem([]);
       setShowModal(false);
       setPrompt('');
     } catch (error) {
       console.error('Error generating diagram:', error);
+      setErrorMessage(error.message || 'Something went wrong while generating.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Helper function to generate use case diagram elements from a prompt
-  const generateUseCaseElements = (prompt) => {
-    // This is a simplified implementation that creates basic use case diagram elements
-    // based on common patterns in the prompt
+  // Helper function to generate use case diagram elements from actor and use-case arrays
+  const generateUseCaseElements = (actors, useCases) => {
     const elements = [];
     const centerX = 400;
     const centerY = 300;
-    
-    // Parse the prompt to identify actors and use cases
-    const actors = extractActors(prompt);
-    const useCases = extractUseCases(prompt);
     
     // Create actors (stick figures)
     actors.forEach((actor, index) => {
@@ -81,6 +114,114 @@ const AIIntegration = ({ setElements, setActiveElem }) => {
       });
     });
     
+    return elements;
+  };
+
+  const fallbackErEntities = (promptText) => {
+    const normalized = String(promptText || '').toLowerCase();
+    if (normalized.includes('bank') || normalized.includes('payment')) {
+      return [
+        { name: 'Customer', attributes: ['customer_id (PK)', 'name', 'email', 'phone'] },
+        { name: 'Account', attributes: ['account_id (PK)', 'customer_id (FK)', 'account_type', 'balance'] },
+        { name: 'Payment', attributes: ['payment_id (PK)', 'account_id (FK)', 'merchant_id (FK)', 'amount', 'status', 'created_at'] },
+        { name: 'Merchant', attributes: ['merchant_id (PK)', 'name', 'category'] },
+        { name: 'Transaction', attributes: ['transaction_id (PK)', 'payment_id (FK)', 'reference', 'processed_at'] },
+      ];
+    }
+
+    return [
+      { name: 'User', attributes: ['user_id (PK)', 'name', 'email'] },
+      { name: 'Project', attributes: ['project_id (PK)', 'owner_id (FK)', 'name'] },
+      { name: 'Record', attributes: ['record_id (PK)', 'project_id (FK)', 'created_at'] },
+    ];
+  };
+
+  const fallbackErRelationships = (promptText) => {
+    const normalized = String(promptText || '').toLowerCase();
+    if (normalized.includes('bank') || normalized.includes('payment')) {
+      return [
+        { from: 'Customer', to: 'Account', label: 'owns', cardinality: '1:N' },
+        { from: 'Account', to: 'Payment', label: 'initiates', cardinality: '1:N' },
+        { from: 'Merchant', to: 'Payment', label: 'receives', cardinality: '1:N' },
+        { from: 'Payment', to: 'Transaction', label: 'records', cardinality: '1:1' },
+      ];
+    }
+
+    return [
+      { from: 'User', to: 'Project', label: 'owns', cardinality: '1:N' },
+      { from: 'Project', to: 'Record', label: 'contains', cardinality: '1:N' },
+    ];
+  };
+
+  const generateErElements = (entities, relationships) => {
+    const cleanEntities = (entities || [])
+      .map((entity) => ({
+        name: normalizeName(entity?.name),
+        attributes: (entity?.attributes || []).map((attr) => normalizeName(attr)).filter(Boolean).slice(0, 8)
+      }))
+      .filter((entity) => entity.name)
+      .slice(0, 8);
+
+    const cleanRelationships = (relationships || [])
+      .map((relation) => ({
+        from: normalizeName(relation?.from),
+        to: normalizeName(relation?.to),
+        label: normalizeName(relation?.label),
+        cardinality: normalizeName(relation?.cardinality)
+      }))
+      .filter((relation) => relation.from && relation.to)
+      .slice(0, 12);
+
+    if (!cleanEntities.length) {
+      return generateUseCaseElements(['User'], ['View System']);
+    }
+
+    const elements = [];
+    const startX = 120;
+    const startY = 120;
+    const colWidth = 300;
+    const rowHeight = 220;
+    const columns = Math.max(2, Math.ceil(Math.sqrt(cleanEntities.length)));
+    const entityCenters = {};
+
+    cleanEntities.forEach((entity, index) => {
+      const col = index % columns;
+      const row = Math.floor(index / columns);
+      const x1 = startX + (col * colWidth);
+      const y1 = startY + (row * rowHeight);
+      const x2 = x1 + 220;
+      const dynamicHeight = Math.max(80, 40 + (entity.attributes.length * 18));
+      const y2 = y1 + dynamicHeight;
+
+      elements.push(createRectangle(x1, y1, x2, y2));
+      elements.push(createLine(x1, y1 + 28, x2, y1 + 28));
+      elements.push(createText(x1 + 10, y1 + 6, entity.name, 190, 22));
+
+      entity.attributes.forEach((attribute, attrIndex) => {
+        elements.push(createText(x1 + 10, y1 + 34 + (attrIndex * 16), attribute, 190, 16));
+      });
+
+      entityCenters[normalizeNameKey(entity.name)] = {
+        x: (x1 + x2) / 2,
+        y: (y1 + y2) / 2,
+      };
+    });
+
+    cleanRelationships.forEach((relation) => {
+      const from = entityCenters[normalizeNameKey(relation.from)];
+      const to = entityCenters[normalizeNameKey(relation.to)];
+
+      if (!from || !to) return;
+
+      elements.push(createLine(from.x, from.y, to.x, to.y));
+      const label = [relation.label, relation.cardinality].filter(Boolean).join(' ');
+      if (label) {
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        elements.push(createText(midX + 4, midY + 4, label, 180, 18));
+      }
+    });
+
     return elements;
   };
 
@@ -242,13 +383,13 @@ const AIIntegration = ({ setElements, setActiveElem }) => {
     };
   };
 
-  const createText = (x, y, text) => {
-    // For now, we'll create a placeholder element since rough.js doesn't directly support text
-    // In a real implementation, you would handle text separately
+  const createText = (x, y, text, width = 200, height = 24) => {
     return {
       type: 'text',
-      x,
-      y,
+      x1: x,
+      y1: y,
+      x2: x + width,
+      y2: y + height,
       text,
       roughElement: generator.line(x, y, x + 1, y + 1, { // Placeholder
         stroke: 'transparent',
@@ -260,11 +401,38 @@ const AIIntegration = ({ setElements, setActiveElem }) => {
   return (
     <>
       <button 
+        id="btn-ai-generator"
         className="selectIcon"
-        style={{ position: 'absolute', top: '10px', right: '20px', zIndex: 100 }}
+        style={{ 
+          position: 'fixed', 
+          top: '10px', 
+          right: '340px', 
+          zIndex: 100,
+          background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '24px',
+          padding: '8px 18px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          boxShadow: '0 4px 14px rgba(168, 85, 247, 0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          transition: 'all 0.2s ease-in-out',
+          fontSize: '14px'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-1px) scale(1.03)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.45)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'none';
+          e.currentTarget.style.boxShadow = '0 4px 14px rgba(168, 85, 247, 0.35)';
+        }}
         onClick={() => setShowModal(true)}
       >
-        🤖 AI Diagram Generator
+        <span>🤖</span> AI Diagram Generator
       </button>
 
       {showModal && (
@@ -275,7 +443,8 @@ const AIIntegration = ({ setElements, setActiveElem }) => {
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(15, 23, 42, 0.3)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -285,59 +454,125 @@ const AIIntegration = ({ setElements, setActiveElem }) => {
         >
           <div 
             style={{
-              backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '8px',
-              width: '500px',
-              maxHeight: '80vh',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              padding: '24px',
+              borderRadius: '16px',
+              width: '520px',
+              maxHeight: '85vh',
               overflowY: 'auto',
-              position: 'relative'
+              position: 'relative',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+              border: '1px solid rgba(255, 255, 255, 0.7)',
+              fontFamily: 'system-ui, -apple-system, sans-serif'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>AI Use Case Diagram Generator</h2>
+            <h2 style={{ 
+              margin: '0 0 10px 0', 
+              color: '#1e293b', 
+              fontSize: '20px', 
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>🪄</span> AI Diagram Creator
+            </h2>
+            <p style={{ 
+              margin: '0 0 20px 0', 
+              color: '#64748b', 
+              fontSize: '14px',
+              lineHeight: '1.5'
+            }}>
+              Describe the diagram you want (e.g. Use Case or Entity Relationship). Our AI will instantly model and render it on your canvas.
+            </p>
+
+            {errorMessage ? (
+              <div
+                style={{
+                  marginBottom: '16px',
+                  color: '#e11d48',
+                  backgroundColor: '#fff1f2',
+                  border: '1px solid #fecdd3',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                  fontSize: '13px',
+                  lineHeight: '1.4'
+                }}
+              >
+                {errorMessage}
+              </div>
+            ) : null}
             
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe your system or use case. For example: 'A banking system where customers can login, transfer money, and view account details'"
+              placeholder="e.g., Generate a use case diagram for a food delivery service with Customer, Driver, and Restaurant actors..."
               style={{
                 width: '100%',
-                height: '120px',
-                padding: '10px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                resize: 'vertical',
-                fontSize: '14px'
+                height: '140px',
+                padding: '12px',
+                border: '1.5px solid #cbd5e1',
+                borderRadius: '10px',
+                resize: 'none',
+                fontSize: '14px',
+                lineHeight: '1.5',
+                outline: 'none',
+                color: '#334155',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.2s',
+                fontFamily: 'inherit'
               }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#6366f1'}
+              onBlur={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}
             />
             
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '15px', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '12px' }}>
               <button
                 onClick={() => setShowModal(false)}
                 style={{
-                  padding: '8px 16px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  backgroundColor: '#f5f5f5',
-                  cursor: 'pointer'
+                  padding: '10px 20px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '24px',
+                  backgroundColor: 'white',
+                  color: '#475569',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.2s'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
               >
                 Cancel
               </button>
               <button
                 onClick={generateUseCaseDiagram}
-                disabled={isLoading}
+                disabled={isLoading || !prompt.trim()}
                 style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#4CAF50',
+                  padding: '10px 20px',
+                  background: isLoading || !prompt.trim() 
+                    ? '#94a3b8' 
+                    : 'linear-gradient(135deg, #6366f1, #a855f7)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '4px',
-                  cursor: isLoading ? 'not-allowed' : 'pointer'
+                  borderRadius: '24px',
+                  cursor: isLoading || !prompt.trim() ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  boxShadow: isLoading || !prompt.trim() ? 'none' : '0 4px 12px rgba(99, 102, 241, 0.25)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading && prompt.trim()) {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
                 }}
               >
-                {isLoading ? 'Generating...' : 'Generate Diagram'}
+                {isLoading ? 'Creating...' : 'Create Diagram'}
               </button>
             </div>
           </div>

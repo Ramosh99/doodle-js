@@ -12,6 +12,9 @@ import { ElementType } from './Types/types';
 // import handleLoad from './ButtonComponents/Clicks/Load';
 import { AddText } from './ButtonComponents/Clicks/Write';
 import Text from './Text';
+import AIIntegration from './AIIntegration';
+
+const KEYBOARD_SHORTCUTS_ENABLED = false;
 
 
 const Canvas = () => {
@@ -38,6 +41,7 @@ const Canvas = () => {
   const [isDragging,setIsDragging]=useState(false);
   const [isResizing,setIsResizing]=useState(false); 
   const [resizingPoint,setResizingPoint]=useState("");  //for identify the clicked point of resizing shape
+  const [editingIndex, setEditingIndex] = useState(null);
 
   //---------------------------------
 
@@ -65,6 +69,11 @@ const Canvas = () => {
    
   //--------to identify whether ctrl is pressed or not
    useEffect(() => {
+    if (!KEYBOARD_SHORTCUTS_ENABLED) {
+      setIsCtrlPressed(false);
+      return;
+    }
+
     const handleKeyDown = (event) => {
       if (event.key === 'Control') {
         setIsCtrlPressed(true);
@@ -234,9 +243,9 @@ const Canvas = () => {
           );
         }
         
-        // ------------------------------- maintaining x1<x1 & y1<y2 ----------------------
+        // ------------------------------- maintaining x1<x2 & y1<y2 ----------------------
         const element = elements[elements.length-1];
-        // if(element.length>=0){
+        if (element) {
           if(element.type==="rectangle"){
             if(element.x2<element.x1){
               let tmp = element.x1;
@@ -249,7 +258,29 @@ const Canvas = () => {
               element.y2=tmp;
             }
           } 
-        // }
+        }
+
+        if (mode === "text") {
+          const index = elements.length - 1;
+          setEditingIndex(index);
+          setMode("select");
+        }
+    };
+
+    const handleDoubleClick = (e) => {
+      if (mode !== "select") return;
+      const { clientX, clientY } = e;
+      const x = (clientX - pan.x * zoom + ZoomOffset.x)/zoom;
+      const y = (clientY - pan.y * zoom + ZoomOffset.y)/zoom;
+
+      // Find if we double clicked a text element
+      const clickedTextIndex = elements.findIndex((el) => {
+        return el.type === "text" && x >= el.x1 && x <= el.x2 && y >= el.y1 && y <= el.y2;
+      });
+
+      if (clickedTextIndex !== -1) {
+        setEditingIndex(clickedTextIndex);
+      }
     };
 
     const handleModeChange = (newMode) => {
@@ -267,11 +298,16 @@ const Canvas = () => {
         const json = e.target.result;
         const loadedElements = JSON.parse(json);
         console.log(loadedElements);
-        const elementsToSet = loadedElements.flatMap(({ type, x1, y1, x2, y2, roughElement, points }) => {
-          if (type !== ElementType.PAINT_BRUSH) {
-            return createElement[type](x1, y1, x2, y2, roughElement.options.fill, roughElement.options.stroke);
+        const elementsToSet = loadedElements.map((el) => {
+          const { type, x1, y1, x2, y2, roughElement, points, text } = el;
+          if (type === ElementType.PAINT_BRUSH) {
+            return { type: ElementType.PAINT_BRUSH, points, x1, y1, x2, y2 };
+          } else if (type === ElementType.TEXT) {
+            return { type: ElementType.TEXT, x1, y1, x2, y2, text };
           } else {
-            return { type: ElementType.PAINT_BRUSH, points }; // Directly return the points
+            const fill = roughElement && roughElement.options ? roughElement.options.fill : undefined;
+            const stroke = roughElement && roughElement.options ? roughElement.options.stroke : 'black';
+            return createElement[type](x1, y1, x2, y2, fill, stroke);
           }
         }).filter(element => element !== null);
     
@@ -303,12 +339,51 @@ const Canvas = () => {
                 setZoom={setZoom}
                 setPan={setPan}
                 />
+              <AIIntegration setElements={setElements} setActiveElem={setActiveElem} />
+              <a
+                href="/eraser"
+                style={{
+                  position: 'fixed',
+                  top: '10px',
+                  right: '535px',
+                  zIndex: 100,
+                  background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+                  color: '#cbd5e1',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '24px',
+                  padding: '8px 18px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease-in-out',
+                  fontSize: '14px',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px) scale(1.03)';
+                  e.currentTarget.style.color = '#f8fafc';
+                  e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.color = '#cbd5e1';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.25)';
+                }}
+              >
+                <span>✏️</span> Doodlejs.io Workspace
+              </a>
             <Color currentSelectedIndex={currentSelectedIndex} elements={elements} setElements={setElements} activeElem={activeElem} setActiveElem={setActiveElem} activeColor={activeColor} setActiveColor={setActiveColor} activeStrokeColor={activeStrokeColor} setActiveStrokeColor={setActiveStrokeColor}></Color>
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
+                onDoubleClick={handleDoubleClick}
                 // onWheel={handleWheel}
                 width={dimensions.width}
                 height={dimensions.height}
@@ -369,7 +444,28 @@ const Canvas = () => {
 
 
             {elements.map((el,ind)=>{
-              return el.type=='text'?<Text key={ind} prop={el}></Text>:''
+              if (el.type !== 'text') return null;
+              return (
+                <Text 
+                  key={el.id || ind} 
+                  prop={el} 
+                  isEditing={editingIndex === ind}
+                  onChange={(newText) => {
+                    const newElements = [...elements];
+                    newElements[ind] = { ...newElements[ind], text: newText };
+                    setElements(newElements);
+                  }}
+                  onFinishEditing={() => {
+                    setEditingIndex(null);
+                    // Remove if empty
+                    if (!elements[ind].text || elements[ind].text.trim() === '') {
+                      const newElements = elements.filter((_, i) => i !== ind);
+                      setElements(newElements);
+                      setActiveElem([]);
+                    }
+                  }}
+                />
+              );
             })}
         </div>
     );
