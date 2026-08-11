@@ -9,20 +9,20 @@ const MermaidRenderer = dynamic(() => import('./Mermaid'), { ssr: false });
 
 // ── Diagram configs ───────────────────────────────────────────────────────────
 const MERMAID_TYPES = [
-  { id: 'flowchart', label: 'Flowchart',  icon: '⬡', hint: 'User login and registration flow' },
-  { id: 'sequence',  label: 'Sequence',   icon: '↔', hint: 'API call between client and server' },
-  { id: 'er',        label: 'ER Diagram', icon: '🗄', hint: 'E-commerce database schema' },
-  { id: 'class',     label: 'Class',      icon: '📦', hint: 'Animal class hierarchy' },
-  { id: 'mindmap',   label: 'Mindmap',    icon: '🧠', hint: 'Machine learning concepts' },
-  { id: 'state',     label: 'State',      icon: '🔄', hint: 'Order processing states' },
+  { id: 'flowchart', label: 'Flowchart',  hint: 'User login and registration flow' },
+  { id: 'sequence',  label: 'Sequence',   hint: 'API call between client and server' },
+  { id: 'er',        label: 'ER Diagram', hint: 'E-commerce database schema' },
+  { id: 'class',     label: 'Class',      hint: 'Animal class hierarchy' },
+  { id: 'mindmap',   label: 'Mindmap',    hint: 'Machine learning concepts' },
+  { id: 'state',     label: 'State',      hint: 'Order processing states' },
 ];
 
 const CANVAS_TYPES = [
-  { id: 'architecture', label: 'Architecture', icon: '🏗', hint: 'Microservices e-commerce platform' },
-  { id: 'network',      label: 'Network',      icon: '🌐', hint: 'Cloud network topology with VPCs' },
-  { id: 'pipeline',     label: 'Pipeline',     icon: '🔀', hint: 'CI/CD pipeline for a web app' },
-  { id: 'system',       label: 'System',       icon: '⚙️', hint: 'Real-time chat system design' },
-  { id: 'infra',        label: 'Infra',        icon: '☁️', hint: 'AWS infrastructure for a SaaS app' },
+  { id: 'architecture', label: 'Architecture', hint: 'Microservices e-commerce platform' },
+  { id: 'network',      label: 'Network',      hint: 'Cloud network topology with VPCs' },
+  { id: 'pipeline',     label: 'Pipeline',     hint: 'CI/CD pipeline for a web app' },
+  { id: 'system',       label: 'System',       hint: 'Real-time chat system design' },
+  { id: 'infra',        label: 'Infra',        hint: 'AWS infrastructure for a SaaS app' },
 ];
 
 const SHAPE_MAP = {
@@ -61,7 +61,7 @@ function buildCanvasElements(nodes, edges) {
     if (el) elements.push(el);
 
     // Label centred in the node box
-    const label = [n.icon, n.label].filter(Boolean).join(' ');
+    const label = n.label;
     const lh = 20;
     elements.push({
       type: 'text',
@@ -184,7 +184,7 @@ export default function AISidebar({ setElements, setActiveElem }) {
           display: 'flex', alignItems: 'center', gap: 5,
         }}
       >
-        ✨ AI
+        AI
       </button>
 
       {/* ── Sidebar panel ──────────────────────────────────────── */}
@@ -192,28 +192,27 @@ export default function AISidebar({ setElements, setActiveElem }) {
         className="ai-panel"
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0, width: 360,
-          background: '#ffffff', borderLeft: '1px solid #e2e8f0',
+          background: '#ffffff', borderLeft: '1px solid #e5e5e5',
           display: 'flex', flexDirection: 'column',
-          zIndex: 499, fontFamily: 'system-ui, -apple-system, sans-serif',
+          zIndex: 499, fontFamily: 'var(--font-sans), system-ui, sans-serif',
           transform: open ? 'translateX(0)' : 'translateX(100%)',
           boxShadow: open ? '-6px 0 30px rgba(0,0,0,0.08)' : 'none',
         }}
       >
         {/* Header */}
         <div style={{
-          padding: '16px 18px',
-          borderBottom: '1px solid #f1f5f9',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'linear-gradient(to right, #f8f7ff, #fdf4ff)',
+          padding: '20px 24px',
+          borderBottom: '1px solid #e5e5e5',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+          background: '#fafafa',
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ fontSize: 18 }}>✨</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#1e1b4b' }}>AI Diagram Generator</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 20, fontFamily: 'var(--font-serif), serif', fontWeight: 600, color: '#1a1a1a', letterSpacing: '-0.02em' }}>
+                AI Diagram Generator
+              </span>
             </div>
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, marginLeft: 25 }}>
-              Powered by Gemini 3.5 Flash
-            </div>
+           
           </div>
           <button
             onClick={() => setOpen(false)}
@@ -221,19 +220,18 @@ export default function AISidebar({ setElements, setActiveElem }) {
           >✕</button>
         </div>
 
-        {/* Mode tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', background: '#fafbfc' }}>
           <button className="ai-tab" style={{
             color: mode === 'canvas' ? '#6366f1' : '#94a3b8',
             borderBottom: `2px solid ${mode === 'canvas' ? '#6366f1' : 'transparent'}`,
           }} onClick={() => switchMode('canvas')}>
-            🖊 Sketch Canvas
+            Sketch Canvas
           </button>
           <button className="ai-tab" style={{
             color: mode === 'mermaid' ? '#6366f1' : '#94a3b8',
             borderBottom: `2px solid ${mode === 'mermaid' ? '#6366f1' : 'transparent'}`,
           }} onClick={() => switchMode('mermaid')}>
-            📊 Standard Diagram
+            Standard Diagram
           </button>
         </div>
 
@@ -257,7 +255,7 @@ export default function AISidebar({ setElements, setActiveElem }) {
                     background:  diagType === t.id ? '#eef2ff' : 'transparent',
                   }}
                 >
-                  {t.icon} {t.label}
+                  {t.label}
                 </button>
               ))}
             </div>
@@ -296,13 +294,14 @@ export default function AISidebar({ setElements, setActiveElem }) {
             onClick={generate}
             style={{
               background: loading || !prompt.trim()
-                ? '#f1f5f9'
-                : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              color: loading || !prompt.trim() ? '#94a3b8' : '#ffffff',
+                ? '#f5f5f5'
+                : '#1a1a1a',
+              color: loading || !prompt.trim() ? '#a3a3a3' : '#ffffff',
               marginBottom: 16,
+              borderRadius: 6,
             }}
           >
-            {loading ? <><Spinner />Generating…</> : '⚡ Generate Diagram'}
+            {loading ? <><Spinner />Generating…</> : 'Generate Diagram'}
           </button>
 
           {/* Error */}
@@ -373,13 +372,13 @@ export default function AISidebar({ setElements, setActiveElem }) {
               <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>
                 {mode === 'canvas' ? (
                   <>
-                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: 6 }}>🖊 Sketch Canvas mode</div>
+                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: 6 }}>Sketch Canvas mode</div>
                     Generates editable rough shapes on your canvas using AI + dagre auto-layout.
                     Move, resize, and restyle every generated node.
                   </>
                 ) : (
                   <>
-                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: 6 }}>📊 Standard Diagram mode</div>
+                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: 6 }}>Standard Diagram mode</div>
                     Generates clean, publication-ready diagrams using Mermaid.js.
                     Flowcharts, ER, sequence, class, mindmaps and more.
                   </>
