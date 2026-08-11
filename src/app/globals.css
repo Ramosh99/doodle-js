@@ -112,3 +112,112 @@ textarea{
     cursor: nesw-resize;
   }
 
+/* ── Grid background ───────────────────────────────────────────── */
+.canvas-grid {
+  background-image: radial-gradient(#c8c8c8 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ── Context menu ─────────────────────────────────────────────── */
+.ctx-menu {
+  position: fixed;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.14);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  z-index: 2000;
+  min-width: 170px;
+  padding: 4px 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #334155;
+  user-select: none;
+  transition: background 0.1s;
+}
+.ctx-item:hover { background: #f1f5f9; }
+.ctx-item.danger { color: #ef4444; }
+.ctx-item.danger:hover { background: #fff1f2; }
+.ctx-sep { height: 1px; background: #e2e8f0; margin: 3px 0; }
+.ctx-hint { margin-left: auto; color: #94a3b8; font-size: 11px; }
+
+/* ── Toast notification ───────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 8px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  pointer-events: none;
+  animation: toastIn 0.2s ease, toastOut 0.3s ease 1.7s forwards;
+}
+@keyframes toastIn {
+  from { opacity:0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity:1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toastOut {
+  from { opacity:1; }
+  to   { opacity:0; }
+}
+
+/* ── Modernized toolbar buttons ───────────────────────────────── */
+.selectIcon {
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 6px;
+  color: #475569;
+  transition: background 0.12s, color 0.12s;
+}
+.selectIcon:hover { background: #f1f5f9; color: #0f172a; }
+.activeIcon {
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 6px;
+  color: #6366f1;
+  background: #eef2ff;
+}
+.toolTipCov {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toolTipCov:hover { background: #f1f5f9; }
+.toolTipCov:hover .toolTip { display: block; }
+.toolTip {
+  display: none;
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #f8fafc;
+  background: #334155;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+}
+.toggleActive {
+  background: #eef2ff;
+  color: #6366f1;
+}
