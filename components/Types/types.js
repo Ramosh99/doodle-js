@@ -7,7 +7,8 @@ export const ElementType = {
     ARROW: 'arrow',
     PAINT_BRUSH: 'paint_brush',
     TEXT: 'text',
-    ELLIPSE: 'ellipse'
+    ELLIPSE: 'ellipse',
+    MERMAID: 'mermaid'
 };
 
   

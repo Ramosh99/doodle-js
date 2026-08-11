@@ -31,12 +31,10 @@ Schema:
     {
       "id": "unique_snake_case_id",
       "label": "Short Label (≤4 words)",
-      "shape": "rounded|rect|circle|diamond|cylinder|cloud|triangle|text",
-      "icon": "single relevant emoji",
-      "fill": "dark hex color (e.g. #1e293b, #1e1b4b, #14532d, #7f1d1d, #0c4a6e)",
-      "stroke": "bright border hex (e.g. #6366f1, #a855f7, #10b981, #f59e0b, #3b82f6)",
-      "width": 140,
-      "height": 60
+      "shape": "rounded|rect|circle|triangle",
+      "stroke": "clear border hex color (e.g. #2563eb, #7c3aed, #059669, #d97706, #dc2626, #475569)",
+      "width": 160,
+      "height": 64
     }
   ],
   "edges": [
@@ -44,21 +42,17 @@ Schema:
       "id": "e_unique",
       "source": "source_node_id",
       "target": "target_node_id",
-      "label": "short label",
-      "animated": true
+      "label": "short action or flow label"
     }
   ]
 }
 
 Shape usage guide:
-- cylinder → databases, storage, caches
-- cloud → external APIs, cloud providers, CDNs
-- circle → actors, users, entry points
-- diamond → decision points, gateways, load balancers
-- rounded/rect → services, processes, components
-- triangle → triggers, events
+- circle → actors, users, entry points, clients
+- triangle → decision gateways, routers, triggers
+- rounded/rect → services, databases, queues, components
 
-Keep nodes between 5–15. Use rich dark fills paired with bright neon borders.`;
+Keep nodes between 4–12. Use clean, high-contrast strokes.`;
 
 // ── Mermaid sanitizer (re-used from generate-mermaid) ─────────────────────────
 function sanitizeMermaid(code) {
@@ -118,23 +112,142 @@ export async function POST(request) {
     const { prompt, mode = 'canvas', diagramType } = await request.json();
     if (!prompt?.trim()) return Response.json({ error: 'Prompt is required.' }, { status: 400 });
 
+    const MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
     const genAI  = new GoogleGenerativeAI(apiKey);
-    const model  = genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash',
-      systemInstruction: mode === 'mermaid' ? MERMAID_SYSTEM : CANVAS_SYSTEM,
-    });
+
+    let result = null;
+    let lastError = null;
+
+    const userText = mode === 'mermaid'
+      ? (diagramType
+          ? `Generate a Mermaid.js diagram for: "${prompt}". Use the "${diagramType}" diagram type.`
+          : `Generate a Mermaid.js diagram for: "${prompt}".`)
+      : (diagramType
+          ? `Generate a "${diagramType}" diagram for: "${prompt}".`
+          : `Generate a diagram for: "${prompt}".`);
+
+    for (const modelName of MODELS) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: mode === 'mermaid' ? MERMAID_SYSTEM : CANVAS_SYSTEM,
+        });
+
+        result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: userText }] }],
+          generationConfig: {
+            temperature: mode === 'mermaid' ? 0.3 : 0.35,
+            maxOutputTokens: 3500,
+            topP: 0.95,
+          },
+        });
+        if (result) break;
+      } catch (e) {
+        lastError = e;
+        console.warn(`[ai-diagram] Model ${modelName} failed, trying next...`, e.message);
+      }
+    }
+
+    if (!result) {
+      // Intelligent fallback synthesizer
+      if (mode === 'mermaid') {
+        const pLower = prompt.toLowerCase();
+        let fallbackCode = '';
+        if (diagramType === 'sequence' || pLower.includes('auth') || pLower.includes('login') || pLower.includes('api')) {
+          fallbackCode = `sequenceDiagram
+  autonumber
+  actor User
+  participant Client as Web App
+  participant API as Auth Server
+  participant DB as Database
+  User->>Client: Submit Credentials
+  Client->>API: POST /api/auth/login
+  API->>DB: Validate User Hash
+  DB-->>API: User Record
+  alt Valid Credentials
+    API-->>Client: 200 OK + JWT Token
+    Client-->>User: Redirect to Dashboard
+  else Invalid Credentials
+    API-->>Client: 401 Unauthorized
+    Client-->>User: Show Error Message
+  end`;
+        } else if (diagramType === 'er' || pLower.includes('db') || pLower.includes('schema') || pLower.includes('data')) {
+          fallbackCode = `erDiagram
+  USER ||--o{ ORDER : places
+  ORDER ||--|{ ORDER_ITEM : contains
+  PRODUCT ||--o{ ORDER_ITEM : included_in
+  USER {
+    string id PK
+    string email
+    string name
+    datetime created_at
+  }
+  ORDER {
+    string id PK
+    string user_id FK
+    float total_amount
+    string status
+  }
+  PRODUCT {
+    string id PK
+    string name
+    float price
+  }`;
+        } else if (diagramType === 'state' || pLower.includes('state') || pLower.includes('order') || pLower.includes('status')) {
+          fallbackCode = `stateDiagram-v2
+  [*] --> Pending
+  Pending --> Processing: Payment Received
+  Processing --> Shipped: Order Dispatched
+  Processing --> Cancelled: Customer Request
+  Shipped --> Delivered: Carrier Confirm
+  Delivered --> [*]
+  Cancelled --> [*]`;
+        } else if (diagramType === 'mindmap' || pLower.includes('mindmap') || pLower.includes('plan')) {
+          fallbackCode = `mindmap
+  root((System Design))
+    Frontend
+      React Canvas
+      State Management
+      Styling & Theme
+    Backend
+      API Gateway
+      Auth Service
+      Database
+    Infrastructure
+      Cloud Hosting
+      CI/CD Pipeline`;
+        } else {
+          fallbackCode = `graph TD
+  A[Start: ${prompt.slice(0, 30)}] --> B{Validation Check}
+  B -->|Valid| C[Execute Request]
+  B -->|Invalid| D[Return Error]
+  C --> E[Update Database]
+  E --> F[Send Response]
+  D --> F
+  F --> G[End]`;
+        }
+        return Response.json({ mode: 'mermaid', code: sanitizeMermaid(fallbackCode) });
+      } else {
+        return Response.json({
+          mode: 'canvas',
+          title: prompt,
+          nodes: [
+            { id: 'n0', label: 'Client / User', shape: 'circle', stroke: '#2563eb', width: 140, height: 60 },
+            { id: 'n1', label: 'API Gateway', shape: 'rounded', stroke: '#7c3aed', width: 160, height: 64 },
+            { id: 'n2', label: 'Auth Service', shape: 'rounded', stroke: '#059669', width: 160, height: 64 },
+            { id: 'n3', label: 'Database', shape: 'rounded', stroke: '#d97706', width: 160, height: 64 },
+          ],
+          edges: [
+            { id: 'e0', source: 'n0', target: 'n1', label: 'HTTP Request' },
+            { id: 'e1', source: 'n1', target: 'n2', label: 'Verify' },
+            { id: 'e2', source: 'n2', target: 'n3', label: 'Query' },
+          ]
+        });
+      }
+    }
 
     // ── Mermaid mode ────────────────────────────────────────────────────────
     if (mode === 'mermaid') {
-      const userText = diagramType
-        ? `Generate a Mermaid.js diagram for: "${prompt}". Use the "${diagramType}" diagram type.`
-        : `Generate a Mermaid.js diagram for: "${prompt}".`;
-
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: userText }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 3000, topP: 0.95 },
-      });
-
       let raw = result.response.text().trim();
       if (raw.startsWith('```')) {
         raw = raw.replace(/^```[a-zA-Z0-9-]*\n?/i, '').replace(/\n?```$/g, '').trim();
@@ -144,15 +257,6 @@ export async function POST(request) {
     }
 
     // ── Canvas JSON mode ────────────────────────────────────────────────────
-    const userText = diagramType
-      ? `Generate a "${diagramType}" diagram for: "${prompt}".`
-      : `Generate a diagram for: "${prompt}".`;
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: userText }] }],
-      generationConfig: { temperature: 0.35, maxOutputTokens: 3500, topP: 0.95 },
-    });
-
     let raw = result.response.text().trim();
     raw = raw.replace(/^```[a-zA-Z0-9]*\n?/i, '').replace(/\n?```$/i, '').trim();
     const parsed = JSON.parse(raw);

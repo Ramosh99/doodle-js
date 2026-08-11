@@ -11,6 +11,7 @@ import CutCopyPaste from './ButtonComponents/Clicks/CutCopyPaste';
 import { ElementType } from './Types/types';
 import { AddText } from './ButtonComponents/Clicks/Write';
 import Text from './Text';
+import MermaidElement from './MermaidElement';
 import AISidebar from './AISidebar';
 import ContextMenu from './ContextMenu';
 
@@ -26,6 +27,81 @@ const restoreBrush = (el) => ({
   x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2,
   color: el.color || '#000000',
 });
+
+// Calculate bounding box for any element
+const getElementBounds = (el) => {
+  if (el.type === ElementType.PAINT_BRUSH) {
+    if (!el.points || el.points.length === 0) return { minX: el.x1 || 0, minY: el.y1 || 0, maxX: el.x2 || 0, maxY: el.y2 || 0 };
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    el.points.forEach(p => {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    });
+    return { minX, minY, maxX, maxY };
+  }
+  if (el.type === ElementType.CIRCLE) {
+    const r = Math.hypot((el.x2 || 0) - (el.x1 || 0), (el.y2 || 0) - (el.y1 || 0));
+    return { minX: el.x1 - r, minY: el.y1 - r, maxX: el.x1 + r, maxY: el.y1 + r };
+  }
+  const x1 = typeof el.x1 === 'number' ? el.x1 : (el.x || 0);
+  const y1 = typeof el.y1 === 'number' ? el.y1 : (el.y || 0);
+  const x2 = typeof el.x2 === 'number' ? el.x2 : x1 + 160;
+  const y2 = typeof el.y2 === 'number' ? el.y2 : y1 + 64;
+  return {
+    minX: Math.min(x1, x2),
+    minY: Math.min(y1, y2),
+    maxX: Math.max(x1, x2),
+    maxY: Math.max(y1, y2),
+  };
+};
+
+// Check if an element overlaps with a selection box
+const isElementInBox = (el, box) => {
+  const b = getElementBounds(el);
+  const bMinX = Math.min(box.x1, box.x2);
+  const bMaxX = Math.max(box.x1, box.x2);
+  const bMinY = Math.min(box.y1, box.y2);
+  const bMaxY = Math.max(box.y1, box.y2);
+  return !(b.maxX < bMinX || b.minX > bMaxX || b.maxY < bMinY || b.minY > bMaxY);
+};
+
+// Move any element type by (dx, dy)
+const moveElement = (el, dx, dy) => {
+  if (el.type === ElementType.PAINT_BRUSH) {
+    return {
+      ...el,
+      x1: (el.x1 || 0) + dx,
+      y1: (el.y1 || 0) + dy,
+      x2: (el.x2 || 0) + dx,
+      y2: (el.y2 || 0) + dy,
+      points: (el.points || []).map(p => ({ x: p.x + dx, y: p.y + dy })),
+    };
+  }
+  if (el.type === ElementType.TEXT || el.type === ElementType.MERMAID || el.type === 'mermaid') {
+    return {
+      ...el,
+      x1: el.x1 + dx,
+      y1: el.y1 + dy,
+      x2: el.x2 + dx,
+      y2: el.y2 + dy,
+    };
+  }
+  const fill   = el.roughElement?.options?.fill;
+  const stroke = el.roughElement?.options?.stroke || '#1e293b';
+  const sw     = el.roughElement?.options?.strokeWidth || 2;
+  const newX1 = el.x1 + dx;
+  const newY1 = el.y1 + dy;
+  const newX2 = el.x2 + dx;
+  const newY2 = el.y2 + dy;
+
+  const creator = createElement[el.type];
+  if (creator) {
+    return creator(newX1, newY1, newX2, newY2, fill, stroke, sw);
+  }
+  return { ...el, x1: newX1, y1: newY1, x2: newX2, y2: newY2 };
+};
 
 const Canvas = () => {
 
@@ -43,6 +119,9 @@ const Canvas = () => {
   const [activeElem, setActiveElem] = useState([]);
   const [drawing, setDrawing] = useState(false);
   const [panning, setPanning] = useState(false);
+  const [isRightPanning, setIsRightPanning] = useState(false);
+  const rightPanMoved = useRef(false);
+  const [selectionBox, setSelectionBox] = useState(null); // { x1, y1, x2, y2 }
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [ZoomOffset, setZoomOffset] = useState({ x: 0, y: 0 });
@@ -102,11 +181,24 @@ const Canvas = () => {
 
   // ── Ctrl key tracking ─────────────────────────────────────────────────────
   useEffect(() => {
-    const down = (e) => { if (e.key === 'Control') setIsCtrlPressed(true); };
-    const up   = (e) => { if (e.key === 'Control') setIsCtrlPressed(false); };
+    const down = (e) => { if (e.key === 'Control' || e.key === 'Shift') setIsCtrlPressed(true); };
+    const up   = (e) => { if (e.key === 'Control' || e.key === 'Shift') setIsCtrlPressed(false); };
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
+  }, []);
+
+  // ── Global mouseup cleanup ────────────────────────────────────────────────
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsRightPanning(false);
+      setDrawing(false);
+      setPanning(false);
+      setIsDragging(false);
+      setSelectionBox(null);
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, []);
 
   // ── Auto-save ─────────────────────────────────────────────────────────────
@@ -159,6 +251,16 @@ const Canvas = () => {
     const copies = activeElem.map(el => {
       if (el.type === ElementType.PAINT_BRUSH) {
         return { ...el, points: el.points.map(p => ({ x: p.x + 20, y: p.y + 20 })) };
+      }
+      if (el.type === ElementType.MERMAID || el.type === 'mermaid') {
+        return {
+          ...el,
+          id: `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          x1: el.x1 + 20,
+          y1: el.y1 + 20,
+          x2: el.x2 + 20,
+          y2: el.y2 + 20,
+        };
       }
       const fill   = el.roughElement?.options?.fill;
       const stroke = el.roughElement?.options?.stroke || 'black';
@@ -225,7 +327,14 @@ const Canvas = () => {
 
   // ── Mouse handlers ────────────────────────────────────────────────────────
   const handleMouseDown = (e) => {
-    if (e.button === 2) return; // right-click handled by onContextMenu
+    // Right-click or middle-click → Start pan
+    if (e.button === 2 || e.button === 1) {
+      e.preventDefault();
+      setIsRightPanning(true);
+      rightPanMoved.current = false;
+      return;
+    }
+
     const { x, y } = toCanvas(e.clientX, e.clientY);
     const sx = snap(x), sy = snap(y);
     setMousePosition({ x: sx, y: sy });
@@ -233,7 +342,7 @@ const Canvas = () => {
     if (mode === 'grab') { setPanning(true); return; }
 
     if (mode === 'eraser') {
-      setDrawing(true); // Treat as drawing so mouse move continues to erase
+      setDrawing(true);
       const index = elements.findLastIndex(el => isMouseInShape(parseInt(sx), parseInt(sy), el));
       if (index !== -1) {
         setUndoStack(prev => [...prev, elements]);
@@ -244,15 +353,46 @@ const Canvas = () => {
     }
 
     if (mode === 'select') {
-      selectTheShapeMouseDown(
-        parseInt(sx), parseInt(sy),
-        setStarx, setStary, setIsDragging, setCurrentSelectedIndex,
-        setActiveElem, activeElem, elements, currentSelectedIndex,
-        resizingPoint, isResizing, setIsResizing,
-        activeColor, activeStrokeColor, isCtrlPressed
-      );
-      setUndoStack(prev => [...prev, elements]);
-      setRedoStack([]);
+      // Check if clicking on resize point
+      if (resizingPoint) {
+        setIsResizing(true);
+        setIsDragging(false);
+        setStarx(sx);
+        setStary(sy);
+        setUndoStack(prev => [...prev, elements]);
+        setRedoStack([]);
+        return;
+      }
+
+      const clickedIndex = elements.findLastIndex(el => isMouseInShape(parseInt(sx), parseInt(sy), el));
+      if (clickedIndex !== -1) {
+        const clickedEl = elements[clickedIndex];
+        setCurrentSelectedIndex(clickedIndex);
+        setStarx(sx);
+        setStary(sy);
+        setIsDragging(true);
+        setUndoStack(prev => [...prev, elements]);
+        setRedoStack([]);
+
+        if (activeElem.includes(clickedEl)) {
+          // Already in selection, ready for group drag
+        } else {
+          if (isCtrlPressed) {
+            setActiveElem(prev => [...prev, clickedEl]);
+          } else {
+            setActiveElem([clickedEl]);
+          }
+        }
+        return;
+      }
+
+      // Clicked on empty canvas → start marquee selection box
+      if (!isCtrlPressed) {
+        setActiveElem([]);
+      }
+      setSelectionBox({ x1: sx, y1: sy, x2: sx, y2: sy });
+      setStarx(sx);
+      setStary(sy);
       return;
     }
 
@@ -264,21 +404,58 @@ const Canvas = () => {
   };
 
   const handleMouseMove = (e) => {
+    // Pan with right-click or grab mode
+    if (isRightPanning || panning) {
+      if (Math.abs(e.movementX) > 0 || Math.abs(e.movementY) > 0) {
+        rightPanMoved.current = true;
+      }
+      setPan(prev => ({ x: prev.x + e.movementX, y: prev.y + e.movementY }));
+      return;
+    }
+
     const { x, y } = toCanvas(e.clientX, e.clientY);
     const sx = snap(x), sy = snap(y);
 
-    if (panning) {
-      setPan(prev => ({ x: prev.x + e.movementX, y: prev.y + e.movementY }));
-      setActiveElem([]);
+    // Marquee selection box dragging
+    if (selectionBox) {
+      const currentBox = { ...selectionBox, x2: sx, y2: sy };
+      setSelectionBox(currentBox);
+      const matched = elements.filter(el => isElementInBox(el, currentBox));
+      setActiveElem(matched);
       return;
     }
+
     if (mode === 'select') {
-      selectTheShapeMove(
-        parseInt(sx), parseInt(sy), isDragging, starx, stary,
-        currentSelectedIndex, elements, setActiveElem, setElements,
-        setStarx, setStary, setUndoStack, setRedoStack,
-        resizingPoint, isResizing, setIsResizing, activeColor, activeStrokeColor
-      );
+      if (isDragging && activeElem.length > 0) {
+        const dx = sx - starx;
+        const dy = sy - stary;
+        if (dx !== 0 || dy !== 0) {
+          const movedActive = [];
+          const updatedElements = elements.map(el => {
+            if (activeElem.includes(el)) {
+              const moved = moveElement(el, dx, dy);
+              movedActive.push(moved);
+              return moved;
+            }
+            return el;
+          });
+          setElements(updatedElements);
+          setActiveElem(movedActive);
+          setStarx(sx);
+          setStary(sy);
+        }
+        return;
+      }
+
+      if (isResizing && currentSelectedIndex !== null) {
+        selectTheShapeMove(
+          parseInt(sx), parseInt(sy), isDragging, starx, stary,
+          currentSelectedIndex, elements, setActiveElem, setElements,
+          setStarx, setStary, setUndoStack, setRedoStack,
+          resizingPoint, isResizing, setIsResizing, activeColor, activeStrokeColor
+        );
+        return;
+      }
       return;
     }
 
@@ -307,8 +484,13 @@ const Canvas = () => {
   };
 
   const handleMouseUp = () => {
+    setIsRightPanning(false);
     setDrawing(false);
     setPanning(false);
+    setIsDragging(false);
+    setSelectionBox(null);
+    setIsResizing(false);
+
     if (mode === 'select') {
       selectTheShapeMouseUp(isDragging, setIsDragging, setUndoStack, elements, isResizing, setIsResizing, activeColor, activeStrokeColor);
     }
@@ -333,6 +515,10 @@ const Canvas = () => {
 
   const handleContextMenu = (e) => {
     e.preventDefault();
+    if (rightPanMoved.current) {
+      rightPanMoved.current = false;
+      return;
+    }
     if (activeElem.length > 0) setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
@@ -429,13 +615,38 @@ const Canvas = () => {
         height={dimensions.height}
         style={{
           position: 'fixed',
-          cursor: mode === 'grab' ? 'grab' :
-                  mode === 'select' ? 'default' :
+          cursor: isRightPanning ? 'grabbing' :
+                  mode === 'grab' ? (panning ? 'grabbing' : 'grab') :
+                  mode === 'select' ? (isDragging ? 'move' : selectionBox ? 'crosshair' : 'default') :
                   mode === 'eraser' ? 'cell' :
                   mode === 'paint_brush' ? "url('data:image/x-icon;base64,AAACAAEAICAQAAIAAwDoAgAAFgAAACgAAAAgAAAAQAAAAAEABAAAAAAAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAAAAxJ0AALiTAACefgAAq4kAANuvAADougAAGqsAAJF0AADPpQAAAJ4FAA7PAAAAxc8A/8wAAACRBQCrCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDQAAAAAAAAAAAAAAAAAAINCEAAAAAAAAAAAAAAAAAg0IJAAAAAAAAAAAAAAAACDQgBQAAAAAAAAAAAAAAAINCDAYAAAAAAAAAAAAAAAg0IMBtAAAAAAAAAAAAAACDQgwG0AAAAAAAAAAAAAAINCAAbQAAAAAAAAAAAAAAg0IJVtAAAAAAAAAAAAAACDQgkG0AAAAAAAAAAAAAAINCCQDQAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAOpwCwAAAAAAAAAAAAAAAA6nALAAAAAAAAAAAAAAAADqcAsAAAAAAAAAAAAAAAAIpwCwAAAAAAAAAAAAAAAAg3ALAAAAAAAAAAAAAAAACDQAsAAAAAAAAAAAAAAAAINACwAAAAAAAAAAAAAAAAg0ALAAAAAAAAAAAAAAAACDQgkAAAAAAAAAAAAAAAAANCCQAAAAAAAAAAAAAAAAA0IZAAAAAAAAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////////4////8H///+A////AP///gD///wA///4AP//8AH//+AD///AB///gA///wAf//4Bv//8A///+Af///AP///gH///wD///4B///8A///+Af///AP///gH///4D///8B////A////h////5///////////////w=='), auto" :
                   'crosshair',
         }}
       />
+
+      {/* Marquee Group Selection Box */}
+      {selectionBox && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${Math.min(
+              selectionBox.x1 * zoom + pan.x * zoom - ZoomOffset.x,
+              selectionBox.x2 * zoom + pan.x * zoom - ZoomOffset.x
+            )}px`,
+            top: `${Math.min(
+              selectionBox.y1 * zoom + pan.y * zoom - ZoomOffset.y,
+              selectionBox.y2 * zoom + pan.y * zoom - ZoomOffset.y
+            )}px`,
+            width: `${Math.abs((selectionBox.x2 - selectionBox.x1) * zoom)}px`,
+            height: `${Math.abs((selectionBox.y2 - selectionBox.y1) * zoom)}px`,
+            border: '1.5px dashed #3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+            pointerEvents: 'none',
+            zIndex: 450,
+            borderRadius: '2px',
+          }}
+        />
+      )}
 
       {/* Selection handles */}
       {activeElem.length > 0 && mode === 'select' &&
@@ -490,6 +701,41 @@ const Canvas = () => {
                 setElements(elements.filter((_, i) => i !== ind));
                 setActiveElem([]);
               }
+            }}
+          />
+        );
+      })}
+
+      {/* Mermaid elements overlay */}
+      {isClient && elements.map((el, ind) => {
+        if (el.type !== 'mermaid' && el.type !== ElementType.MERMAID) return null;
+        const isSelected = activeElem.some(a => a.id === el.id || (a.x1 === el.x1 && a.y1 === el.y1));
+        return (
+          <MermaidElement
+            key={el.id || ind}
+            element={el}
+            isSelected={isSelected}
+            zoom={zoom}
+            pan={pan}
+            ZoomOffset={ZoomOffset}
+            onUpdateCode={(newCode) => {
+              setUndoStack(prev => [...prev, elements]);
+              setRedoStack([]);
+              setElements(prev =>
+                prev.map((item, i) =>
+                  i === ind || item.id === el.id
+                    ? { ...item, code: newCode }
+                    : item
+                )
+              );
+              showToast('Diagram updated');
+            }}
+            onDelete={() => {
+              setUndoStack(prev => [...prev, elements]);
+              setRedoStack([]);
+              setElements(prev => prev.filter((item, i) => i !== ind && item.id !== el.id));
+              setActiveElem([]);
+              showToast('Diagram deleted');
             }}
           />
         );

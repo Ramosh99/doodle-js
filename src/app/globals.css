@@ -2,16 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'JustMe';
-  src: url('./JustMe.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
+* {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: normal;
 }
 
-textarea{
-  font-family: 'JustMe';
-  border:1px solid #e4f5fa
+body, button, input, textarea, select {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: normal;
+}
+
+textarea {
+  font-family: Georgia, serif;
+  border: 1px solid #e4f5fa;
+  font-weight: normal;
 }
 
 .selectIcon{
@@ -129,7 +133,8 @@ textarea{
   z-index: 2000;
   min-width: 170px;
   padding: 4px 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Georgia, serif;
+  font-weight: normal;
 }
 .ctx-item {
   display: flex;
@@ -140,13 +145,15 @@ textarea{
   cursor: pointer;
   color: #334155;
   user-select: none;
+  font-family: Georgia, serif;
+  font-weight: normal;
   transition: background 0.1s;
 }
 .ctx-item:hover { background: #f1f5f9; }
 .ctx-item.danger { color: #ef4444; }
 .ctx-item.danger:hover { background: #fff1f2; }
 .ctx-sep { height: 1px; background: #e2e8f0; margin: 3px 0; }
-.ctx-hint { margin-left: auto; color: #94a3b8; font-size: 11px; }
+.ctx-hint { margin-left: auto; color: #94a3b8; font-size: 11px; font-family: Georgia, serif; font-weight: normal; }
 
 /* ── Toast notification ───────────────────────────────────────── */
 .toast {
@@ -159,7 +166,8 @@ textarea{
   padding: 8px 20px;
   border-radius: 24px;
   font-size: 13px;
-  font-weight: 500;
+  font-family: Georgia, serif;
+  font-weight: normal;
   z-index: 9999;
   pointer-events: none;
   animation: toastIn 0.2s ease, toastOut 0.3s ease 1.7s forwards;

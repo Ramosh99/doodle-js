@@ -33,21 +33,24 @@ export const drawElement = (roughCanvas, element, ctx) => {
 
 const createElement = {
   [ElementType.RECTANGLE]: (x1, y1, x2, y2, fillcolor, strokecolor, sw = 2) => {
-    const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1, {
-      fill: fillcolor,
-      stroke: strokecolor,
+    const opts = {
+      stroke: strokecolor || '#1e293b',
       strokeWidth: sw,
-      roughness: 2,
-      fillWeight: 3,
-      fillStyle: 'solid',
-    });
+      roughness: 1.5,
+    };
+    if (fillcolor && fillcolor !== 'transparent' && fillcolor !== 'none') {
+      opts.fill = fillcolor;
+      opts.fillStyle = 'solid';
+      opts.fillWeight = 3;
+    }
+    const roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1, opts);
     return new Rectangle(x1, y1, x2, y2, roughElement);
   },
 
   [ElementType.LINE]: (x1, y1, x2, y2, fillcolor, strokecolor, sw = 2) => {
     const roughElement = generator.line(x1, y1, x2, y2, {
-      roughness: 2,
-      stroke: strokecolor,
+      roughness: 1.5,
+      stroke: strokecolor || '#1e293b',
       strokeWidth: sw,
     });
     return new Line(x1, y1, x2, y2, roughElement);
@@ -55,13 +58,16 @@ const createElement = {
 
   [ElementType.CIRCLE]: (x1, y1, x2, y2, fillcolor, strokecolor, sw = 2) => {
     const radius = Math.hypot(x2 - x1, y2 - y1);
-    const roughElement = generator.circle(x1, y1, radius * 2, {
-      fillStyle: 'solid',
-      roughness: 2,
-      fill: fillcolor,
-      stroke: strokecolor,
+    const opts = {
+      roughness: 1.5,
+      stroke: strokecolor || '#1e293b',
       strokeWidth: sw,
-    });
+    };
+    if (fillcolor && fillcolor !== 'transparent' && fillcolor !== 'none') {
+      opts.fill = fillcolor;
+      opts.fillStyle = 'solid';
+    }
+    const roughElement = generator.circle(x1, y1, radius * 2, opts);
     return { type: ElementType.CIRCLE, x1, y1, x2, y2, roughElement };
   },
 
@@ -70,20 +76,32 @@ const createElement = {
     const centerY = (y1 + y2) / 2;
     const width = Math.abs(x2 - x1);
     const height = Math.abs(y2 - y1);
-    const roughElement = generator.ellipse(centerX, centerY, width, height, {
-      fill: fillcolor,
-      fillStyle: 'solid',
-      roughness: 2,
-      stroke: strokecolor,
+    const opts = {
+      roughness: 1.5,
+      stroke: strokecolor || '#1e293b',
       strokeWidth: sw,
-    });
+    };
+    if (fillcolor && fillcolor !== 'transparent' && fillcolor !== 'none') {
+      opts.fill = fillcolor;
+      opts.fillStyle = 'solid';
+    }
+    const roughElement = generator.ellipse(centerX, centerY, width, height, opts);
     return { type: ElementType.ELLIPSE, x1, y1, x2, y2, roughElement };
   },
 
   [ElementType.TRIANGLE]: (x1, y1, x2, y2, fillcolor, strokecolor, sw = 2) => {
+    const opts = {
+      roughness: 1.5,
+      stroke: strokecolor || '#1e293b',
+      strokeWidth: sw,
+    };
+    if (fillcolor && fillcolor !== 'transparent' && fillcolor !== 'none') {
+      opts.fill = fillcolor;
+      opts.fillStyle = 'solid';
+    }
     const roughElement = generator.polygon(
       [[x1, y1], [x2, y2], [(2 * x1) - x2, y2], [x1, y1]],
-      { fill: fillcolor, fillStyle: 'solid', roughness: 2, stroke: strokecolor, strokeWidth: sw }
+      opts
     );
     return { type: ElementType.TRIANGLE, x1, y1, x2, y2, roughElement };
   },

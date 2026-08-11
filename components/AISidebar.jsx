@@ -1,11 +1,8 @@
 'use client';
 import React, { useState, useCallback } from 'react';
-import dynamic from 'next/dynamic';
 import dagre from 'dagre';
 import { createElement } from './ButtonComponents/Clicks/Shapes';
 import { ElementType } from './Types/types';
-
-const MermaidRenderer = dynamic(() => import('./Mermaid'), { ssr: false });
 
 // ── Diagram configs ───────────────────────────────────────────────────────────
 const MERMAID_TYPES = [
@@ -38,51 +35,80 @@ function buildCanvasElements(nodes, edges) {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
   g.setGraph({ rankdir: 'TB', ranksep: 90, nodesep: 70, marginx: 80, marginy: 80 });
-  nodes.forEach(n => g.setNode(n.id, { width: n.width || 140, height: n.height || 60 }));
+  nodes.forEach(n => g.setNode(n.id, { width: n.width || 160, height: n.height || 64 }));
   edges.forEach(e => { if (e.source && e.target) g.setEdge(e.source, e.target); });
   dagre.layout(g);
 
   const elements = [];
-  const centers  = {};
+  const nodeBboxes = {};
 
   nodes.forEach(n => {
     const pos = g.node(n.id);
     if (!pos) return;
-    const w = n.width  || 140;
-    const h = n.height || 60;
+    const w = n.width  || 160;
+    const h = n.height || 64;
     const x1 = Math.round(pos.x - w / 2);
     const y1 = Math.round(pos.y - h / 2);
     const x2 = x1 + w;
     const y2 = y1 + h;
-    centers[n.id] = { x: pos.x, y: pos.y };
+    nodeBboxes[n.id] = { x1, y1, x2, y2, w, h, cx: pos.x, cy: pos.y };
 
     const shapeKey = SHAPE_MAP[n.shape] || 'rectangle';
-    const el = createElement[shapeKey]?.(x1, y1, x2, y2, n.fill || '#1e293b', n.stroke || '#6366f1', 2);
+    const strokeColor = n.stroke || '#3b82f6';
+
+    let el = null;
+    if (shapeKey === 'circle') {
+      const r = Math.min(w, h) / 2;
+      el = createElement['circle']?.(pos.x, pos.y, pos.x + r, pos.y, '', strokeColor, 2);
+    } else if (shapeKey === 'triangle') {
+      el = createElement['triangle']?.(pos.x, y1, x2, y2, '', strokeColor, 2);
+    } else {
+      el = createElement[shapeKey]?.(x1, y1, x2, y2, '', strokeColor, 2);
+    }
     if (el) elements.push(el);
 
     // Label centred in the node box
     const label = n.label;
-    const lh = 20;
+    const lh = 22;
     elements.push({
       type: 'text',
-      x1: x1 + 4,
+      x1: x1 + 6,
       y1: y1 + Math.round((h - lh) / 2),
-      x2: x2 - 4,
+      x2: x2 - 6,
       y2: y1 + Math.round((h - lh) / 2) + lh,
       text: label,
     });
   });
 
   edges.forEach(e => {
-    const from = centers[e.source];
-    const to   = centers[e.target];
+    const from = nodeBboxes[e.source];
+    const to   = nodeBboxes[e.target];
     if (!from || !to) return;
-    const arrow = createElement['arrow']?.(from.x, from.y, to.x, to.y, '', '#94a3b8', 1);
+
+    let startX = from.cx;
+    let startY = from.y2;
+    let endX   = to.cx;
+    let endY   = to.y1;
+
+    if (from.cy > to.cy) {
+      startY = from.y1;
+      endY = to.y2;
+    } else if (Math.abs(from.cy - to.cy) < 20) {
+      if (from.cx < to.cx) {
+        startX = from.x2; startY = from.cy;
+        endX = to.x1; endY = to.cy;
+      } else {
+        startX = from.x1; startY = from.cy;
+        endX = to.x2; endY = to.cy;
+      }
+    }
+
+    const arrow = createElement['arrow']?.(startX, startY, endX, endY, '', '#94a3b8', 1.5);
     if (arrow) elements.push(arrow);
     if (e.label) {
-      const mx = Math.round((from.x + to.x) / 2);
-      const my = Math.round((from.y + to.y) / 2);
-      elements.push({ type: 'text', x1: mx - 45, y1: my - 10, x2: mx + 45, y2: my + 10, text: e.label });
+      const mx = Math.round((startX + endX) / 2);
+      const my = Math.round((startY + endY) / 2);
+      elements.push({ type: 'text', x1: mx - 45, y1: my - 11, x2: mx + 45, y2: my + 11, text: e.label });
     }
   });
 
@@ -103,21 +129,19 @@ const Spinner = () => (
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function AISidebar({ setElements, setActiveElem }) {
-  const [open, setOpen]             = useState(false);
-  const [mode, setMode]             = useState('canvas');
-  const [diagType, setDiagType]     = useState('architecture');
-  const [prompt, setPrompt]         = useState('');
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
-  const [mermaidCode, setMermaidCode] = useState('');
-  const [resultMsg, setResultMsg]   = useState('');
+  const [open, setOpen]         = useState(false);
+  const [mode, setMode]         = useState('canvas');
+  const [diagType, setDiagType] = useState('architecture');
+  const [prompt, setPrompt]     = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
+  const [resultMsg, setResultMsg] = useState('');
 
   const currentTypes = mode === 'mermaid' ? MERMAID_TYPES : CANVAS_TYPES;
   const placeholder  = currentTypes.find(t => t.id === diagType)?.hint || 'Describe your diagram…';
 
   const switchMode = (m) => {
     setMode(m);
-    setMermaidCode('');
     setResultMsg('');
     setError('');
     setDiagType(m === 'mermaid' ? 'flowchart' : 'architecture');
@@ -125,18 +149,36 @@ export default function AISidebar({ setElements, setActiveElem }) {
 
   const generate = useCallback(async () => {
     if (!prompt.trim() || loading) return;
-    setLoading(true); setError(''); setMermaidCode(''); setResultMsg('');
+    setLoading(true); setError(''); setResultMsg('');
     try {
       const res  = await fetch('/api/ai-diagram', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: prompt.trim(), mode, diagramType: diagType }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Generation failed');
+      const resText = await res.text();
+      let data;
+      try {
+        data = JSON.parse(resText);
+      } catch (err) {
+        throw new Error(`Server returned unexpected format (${res.status}). Please check your server or API configuration.`);
+      }
+      if (!res.ok) throw new Error(data?.error || `Generation failed (${res.status})`);
 
       if (data.mode === 'mermaid') {
-        setMermaidCode(data.code || '');
+        const newMermaidEl = {
+          id: `mermaid-${Date.now()}`,
+          type: 'mermaid',
+          x1: 220,
+          y1: 140,
+          x2: 780,
+          y2: 540,
+          code: data.code || '',
+        };
+        setElements(prev => [...prev, newMermaidEl]);
+        setActiveElem([newMermaidEl]);
+        setResultMsg('Mermaid diagram added to canvas! Double-click it on canvas to edit.');
+        setPrompt('');
       } else {
         const els = buildCanvasElements(data.nodes || [], data.edges || []);
         setElements(prev => [...prev, ...els]);
@@ -154,34 +196,42 @@ export default function AISidebar({ setElements, setActiveElem }) {
   return (
     <>
       <style>{`
-        .ai-toggle { transition: right 0.25s cubic-bezier(0.4,0,0.2,1); }
-        .ai-panel  { transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
-        .ai-chip   { cursor:pointer; border-radius:20px; padding:5px 12px; font-size:12px; font-weight:600; border:1.5px solid; transition:all 0.12s; white-space:nowrap; background:transparent; }
+        .ai-toggle { transition: right 0.25s cubic-bezier(0.4,0,0.2,1); font-family: Georgia, serif; font-weight: normal; }
+        .ai-panel  { transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); font-family: Georgia, serif; font-weight: normal; }
+        .ai-chip   { cursor:pointer; border-radius:20px; padding:5px 12px; font-size:12px; font-weight:normal; font-family: Georgia, serif; border:1.5px solid; transition:all 0.12s; white-space:nowrap; background:transparent; }
         .ai-chip:hover { background:#f1f5f9!important; }
-        .ai-tab    { flex:1; padding:10px 0; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; transition:all 0.15s; }
-        .ai-btn    { width:100%; padding:11px; border-radius:8px; border:none; font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.15s; }
+        .ai-tab    { flex:1; padding:10px 0; border:none; background:none; cursor:pointer; font-size:13px; font-weight:normal; font-family: Georgia, serif; transition:all 0.15s; }
+        .ai-btn    { width:100%; padding:11px; border-radius:8px; border:none; font-weight:normal; font-family: Georgia, serif; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.15s; }
         .ai-btn:hover:not(:disabled) { opacity:0.88; transform:translateY(-1px); }
         .ai-btn:disabled { cursor:not-allowed; }
         .ai-scroll::-webkit-scrollbar { width:4px; }
         .ai-scroll::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:4px; }
       `}</style>
 
-      {/* ── Floating toggle tab ─────────────────────────────────── */}
+      {/* ── Floating toggle tab (Bottom Right Edge) ─────────────── */}
       <button
         className="ai-toggle"
         onClick={() => setOpen(o => !o)}
         style={{
-          position: 'fixed', top: '50%',
+          position: 'fixed',
+          bottom: '40px',
           right: open ? 360 : 0,
-          transform: 'translateY(-50%)',
           zIndex: 500,
           background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-          color: '#fff', border: 'none', borderRadius: '10px 0 0 10px',
-          padding: '16px 9px', cursor: 'pointer',
-          writingMode: 'vertical-rl', fontSize: 12, fontWeight: 700,
+          color: '#fff',
+          border: 'none',
+          borderRadius: '10px 0 0 10px',
+          padding: '16px 9px',
+          cursor: 'pointer',
+          writingMode: 'vertical-rl',
+          fontSize: 12,
+          fontWeight: 'normal',
+          fontFamily: 'Georgia, serif',
           letterSpacing: '0.05em',
           boxShadow: '-3px 0 18px rgba(99,102,241,0.35)',
-          display: 'flex', alignItems: 'center', gap: 5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 5,
         }}
       >
         AI
@@ -194,7 +244,7 @@ export default function AISidebar({ setElements, setActiveElem }) {
           position: 'fixed', top: 0, right: 0, bottom: 0, width: 360,
           background: '#ffffff', borderLeft: '1px solid #e5e5e5',
           display: 'flex', flexDirection: 'column',
-          zIndex: 499, fontFamily: 'var(--font-sans), system-ui, sans-serif',
+          zIndex: 499, fontFamily: 'Georgia, serif', fontWeight: 'normal',
           transform: open ? 'translateX(0)' : 'translateX(100%)',
           boxShadow: open ? '-6px 0 30px rgba(0,0,0,0.08)' : 'none',
         }}
@@ -208,7 +258,7 @@ export default function AISidebar({ setElements, setActiveElem }) {
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 20, fontFamily: 'var(--font-serif), serif', fontWeight: 600, color: '#1a1a1a', letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 19, fontFamily: 'Georgia, serif', fontWeight: 'normal', color: '#1a1a1a', letterSpacing: '-0.01em' }}>
                 AI Diagram Generator
               </span>
             </div>
@@ -216,7 +266,7 @@ export default function AISidebar({ setElements, setActiveElem }) {
           </div>
           <button
             onClick={() => setOpen(false)}
-            style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, cursor: 'pointer', fontSize: 16, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 30, height: 30, cursor: 'pointer', fontSize: 16, color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Georgia, serif', fontWeight: 'normal' }}
           >✕</button>
         </div>
 
@@ -224,23 +274,27 @@ export default function AISidebar({ setElements, setActiveElem }) {
           <button className="ai-tab" style={{
             color: mode === 'canvas' ? '#6366f1' : '#94a3b8',
             borderBottom: `2px solid ${mode === 'canvas' ? '#6366f1' : 'transparent'}`,
+            fontFamily: 'Georgia, serif',
+            fontWeight: 'normal',
           }} onClick={() => switchMode('canvas')}>
             Sketch Canvas
           </button>
           <button className="ai-tab" style={{
             color: mode === 'mermaid' ? '#6366f1' : '#94a3b8',
             borderBottom: `2px solid ${mode === 'mermaid' ? '#6366f1' : 'transparent'}`,
+            fontFamily: 'Georgia, serif',
+            fontWeight: 'normal',
           }} onClick={() => switchMode('mermaid')}>
             Standard Diagram
           </button>
         </div>
 
         {/* Scrollable body */}
-        <div className="ai-scroll" style={{ flex: 1, overflowY: 'auto', padding: '18px' }}>
+        <div className="ai-scroll" style={{ flex: 1, overflowY: 'auto', padding: '18px', fontFamily: 'Georgia, serif', fontWeight: 'normal' }}>
 
           {/* Diagram type chips */}
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 'normal', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, fontFamily: 'Georgia, serif' }}>
               Diagram type
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
@@ -253,6 +307,8 @@ export default function AISidebar({ setElements, setActiveElem }) {
                     color:       diagType === t.id ? '#6366f1' : '#64748b',
                     borderColor: diagType === t.id ? '#6366f1' : '#e2e8f0',
                     background:  diagType === t.id ? '#eef2ff' : 'transparent',
+                    fontFamily: 'Georgia, serif',
+                    fontWeight: 'normal',
                   }}
                 >
                   {t.label}
@@ -263,7 +319,7 @@ export default function AISidebar({ setElements, setActiveElem }) {
 
           {/* Prompt */}
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 'normal', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8, fontFamily: 'Georgia, serif' }}>
               Describe your diagram
             </div>
             <textarea
@@ -277,14 +333,14 @@ export default function AISidebar({ setElements, setActiveElem }) {
                 width: '100%', boxSizing: 'border-box',
                 border: '1.5px solid #e2e8f0', borderRadius: 8,
                 padding: '10px 12px', fontSize: 13, color: '#1e293b',
-                fontFamily: 'inherit', resize: 'none', outline: 'none',
+                fontFamily: 'Georgia, serif', fontWeight: 'normal', resize: 'none', outline: 'none',
                 background: '#ffffff', lineHeight: 1.5,
                 transition: 'border-color 0.15s',
               }}
               onFocus={e => e.target.style.borderColor = '#818cf8'}
               onBlur={e  => e.target.style.borderColor = '#e2e8f0'}
             />
-            <div style={{ fontSize: 11, color: '#cbd5e1', marginTop: 4 }}>Ctrl+Enter to generate</div>
+            <div style={{ fontSize: 11, color: '#cbd5e1', marginTop: 4, fontFamily: 'Georgia, serif', fontWeight: 'normal' }}>Ctrl+Enter to generate</div>
           </div>
 
           {/* Generate button */}
@@ -299,6 +355,8 @@ export default function AISidebar({ setElements, setActiveElem }) {
               color: loading || !prompt.trim() ? '#a3a3a3' : '#ffffff',
               marginBottom: 16,
               borderRadius: 6,
+              fontFamily: 'Georgia, serif',
+              fontWeight: 'normal',
             }}
           >
             {loading ? <><Spinner />Generating…</> : 'Generate Diagram'}
@@ -309,6 +367,7 @@ export default function AISidebar({ setElements, setActiveElem }) {
             <div style={{
               background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: 8,
               padding: '10px 14px', fontSize: 12, color: '#e53e3e', marginBottom: 14,
+              fontFamily: 'Georgia, serif', fontWeight: 'normal',
             }}>
               ⚠️ {error}
             </div>
@@ -320,67 +379,33 @@ export default function AISidebar({ setElements, setActiveElem }) {
               background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8,
               padding: '10px 14px', fontSize: 12, color: '#15803d', marginBottom: 14,
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6,
+              fontFamily: 'Georgia, serif', fontWeight: 'normal',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 ✅ {resultMsg}
               </div>
-              <button onClick={() => setResultMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#166534', fontSize: 16 }}>✕</button>
-            </div>
-          )}
-
-          {/* Mermaid result */}
-          {mermaidCode && mode === 'mermaid' && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Result
-                </div>
-                <button
-                  onClick={() => setMermaidCode('')}
-                  style={{ background: 'transparent', border: '1px solid #e2e8f0', borderRadius: 4, padding: '2px 8px', fontSize: 10, cursor: 'pointer', color: '#64748b' }}
-                >
-                  Clear Output
-                </button>
-              </div>
-              <div style={{
-                background: '#0d1117', borderRadius: 10, overflow: 'auto',
-                maxHeight: 400, border: '1px solid #e2e8f0',
-              }}>
-                <MermaidRenderer chartCode={mermaidCode} theme="dark" />
-              </div>
-              <details style={{ marginTop: 10 }}>
-                <summary style={{ fontSize: 11, color: '#94a3b8', cursor: 'pointer', userSelect: 'none' }}>
-                  View Mermaid code
-                </summary>
-                <pre style={{
-                  marginTop: 8, padding: '10px 12px',
-                  background: '#f8fafc', borderRadius: 8,
-                  border: '1px solid #e2e8f0',
-                  fontSize: 11, color: '#64748b',
-                  overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                }}>{mermaidCode}</pre>
-              </details>
+              <button onClick={() => setResultMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#166534', fontSize: 16, fontFamily: 'Georgia, serif', fontWeight: 'normal' }}>✕</button>
             </div>
           )}
 
           {/* Empty state description */}
-          {!loading && !mermaidCode && !resultMsg && !error && (
+          {!loading && !resultMsg && !error && (
             <div style={{
               background: '#f8fafc', borderRadius: 10, padding: 16,
               border: '1px solid #f1f5f9',
+              fontFamily: 'Georgia, serif', fontWeight: 'normal',
             }}>
-              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>
+              <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7, fontFamily: 'Georgia, serif', fontWeight: 'normal' }}>
                 {mode === 'canvas' ? (
                   <>
-                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: 6 }}>Sketch Canvas mode</div>
+                    <div style={{ fontWeight: 'normal', color: '#475569', marginBottom: 6, fontSize: 13 }}>Sketch Canvas mode</div>
                     Generates editable rough shapes on your canvas using AI + dagre auto-layout.
                     Move, resize, and restyle every generated node.
                   </>
                 ) : (
                   <>
-                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: 6 }}>Standard Diagram mode</div>
-                    Generates clean, publication-ready diagrams using Mermaid.js.
-                    Flowcharts, ER, sequence, class, mindmaps and more.
+                    <div style={{ fontWeight: 'normal', color: '#475569', marginBottom: 6, fontSize: 13 }}>Standard Diagram mode</div>
+                    Generates an interactive Mermaid diagram placed directly on the canvas. Double-click the diagram anytime on canvas to live-edit syntax.
                   </>
                 )}
               </div>

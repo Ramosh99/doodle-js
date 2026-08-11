@@ -3,11 +3,11 @@ import rough from "roughjs/bundled/rough.esm";
 import {createElement} from '../Clicks/Shapes';
 import { ElementType } from "components/Types/types";
 export function isMouseOnRectangle(x, y, shape) {
-  let shapeLeft = shape.x1;
-  let shapeRight = shape.x2;
-  let shapeTop = shape.y1;
-  let shapeBottom = shape.y2;
-  if (x > shapeLeft && x < shapeRight && y > shapeTop && y < shapeBottom) {
+  let shapeLeft = Math.min(shape.x1, shape.x2);
+  let shapeRight = Math.max(shape.x1, shape.x2);
+  let shapeTop = Math.min(shape.y1, shape.y2);
+  let shapeBottom = Math.max(shape.y1, shape.y2);
+  if (x >= shapeLeft && x <= shapeRight && y >= shapeTop && y <= shapeBottom) {
     return true;
   } else {
     return false;
@@ -149,7 +149,7 @@ function isMouseOnPaintBrush(x, y, shape) {
 
 //for identify mouse click is inside the shape
 export function isMouseInShape(x, y, shape) {
-  if (shape.type == "rectangle") {
+  if (shape.type == "rectangle" || shape.type == "text" || shape.type == "mermaid") {
     return isMouseOnRectangle(x, y, shape);
   } else if (shape.type == "line") {
     return isMouseOnLineSegment(x, y, shape.x1, shape.y1, shape.x2, shape.y2);
@@ -169,10 +169,6 @@ export function isMouseInShape(x, y, shape) {
   else if(shape.type=="ellipse")
   {
      return isMouseOnEllipse(x, y, shape);
-  }
-  else if(shape.type=="text")
-  {
-     return isMouseOnRectangle(x, y, shape);
   }
   else if(shape.type=="paint_brush")
   {
