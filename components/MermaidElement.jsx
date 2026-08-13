@@ -17,10 +17,10 @@ function cleanupTempNodes(id) {
 
 const PRESETS = [
   { label: 'Flowchart', code: 'graph TD\n  A[Start] --> B{Is Valid?}\n  B -->|Yes| C[Process Request]\n  B -->|No| D[Show Error]\n  C --> E[Complete]' },
-  { label: 'Sequence', code: 'sequenceDiagram\n  autonumber\n  actor User\n  participant Client\n  participant Server\n  participant DB\n  User->>Client: Click Login\n  Client->>Server: POST /auth/login\n  Server->>DB: Query User\n  DB-->>Server: User Data\n  Server-->>Client: JWT Token\n  Client-->>User: Show Dashboard' },
-  { label: 'ER Diagram', code: 'erDiagram\n  USER ||--o{ ORDER : places\n  ORDER ||--|{ ORDER_ITEM : contains\n  PRODUCT ||--o{ ORDER_ITEM : ordered_in\n  USER {\n    string id PK\n    string name\n    string email\n  }\n  ORDER {\n    string id PK\n    string userId FK\n    float total\n  }' },
+  { label: 'Sequence', code: 'sequenceDiagram\n  autonumber\n  actor User\n  participant Client\n  participant Server\n  User->>Client: Click Login\n  Client->>Server: POST /auth/login\n  Server-->>Client: JWT Token\n  Client-->>User: Show Dashboard' },
+  { label: 'ER Diagram', code: 'erDiagram\n  USER ||--o{ ORDER : places\n  ORDER ||--|{ ORDER_ITEM : contains\n  PRODUCT ||--o{ ORDER_ITEM : ordered_in' },
   { label: 'State', code: 'stateDiagram-v2\n  [*] --> Idle\n  Idle --> Processing: Submit\n  Processing --> Success: Verified\n  Processing --> Failed: Invalid\n  Failed --> Idle: Retry\n  Success --> [*]' },
-  { label: 'Mindmap', code: 'mindmap\n  root((Project Roadmap))\n    Design\n      Wireframes\n      Design System\n    Frontend\n      Next.js\n      Canvas Engine\n    Backend\n      API Routes\n      Gemini AI\n    DevOps\n      CI/CD\n      Monitoring' },
+  { label: 'Mindmap', code: 'mindmap\n  root((Project))\n    Design\n      Wireframes\n    Frontend\n      Next.js\n    Backend\n      API Routes' },
 ];
 
 export default function MermaidElement({
@@ -32,12 +32,13 @@ export default function MermaidElement({
   onUpdateCode,
   onDelete,
 }) {
-  const [svgContent, setSvgContent] = useState('');
-  const [renderError, setRenderError] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [draftCode, setDraftCode] = useState(element.code || '');
-  const [modalPreviewSvg, setModalPreviewSvg] = useState('');
-  const [modalError, setModalError] = useState(null);
+  const [svgContent, setSvgContent]     = useState('');
+  const [renderError, setRenderError]   = useState(null);
+  const [isHovered, setIsHovered]       = useState(false);
+  const [isEditing, setIsEditing]       = useState(false);
+  const [draftCode, setDraftCode]       = useState(element.code || '');
+  const [previewSvg, setPreviewSvg]     = useState('');
+  const [previewError, setPreviewError] = useState(null);
   const lastRenderIdRef = useRef(null);
 
   const cx1 = typeof element.x1 === 'number' ? element.x1 : (element.x || 0);
@@ -50,432 +51,285 @@ export default function MermaidElement({
   const width  = Math.max(160, Math.abs(cx2 - cx1) * zoom);
   const height = Math.max(100, Math.abs(cy2 - cy1) * zoom);
 
-  // Initialize and render SVG
+  // Drawer: prefer right side, flip left if not enough room
+  const DRAWER_W   = 340;
+  const DRAWER_GAP = 12;
+  const spaceRight = (typeof window !== 'undefined' ? window.innerWidth : 1200) - (left + width) - DRAWER_GAP;
+  const drawerLeft = spaceRight >= DRAWER_W ? left + width + DRAWER_GAP : left - DRAWER_W - DRAWER_GAP;
+  const drawerTop  = top;
+  const drawerH    = Math.max(height, 340);
+
+  // Render SVG for the canvas node
   const renderSvg = useCallback(async (code) => {
-    if (!code || !code.trim()) {
-      setSvgContent('');
-      return;
-    }
-
-    if (lastRenderIdRef.current) {
-      cleanupTempNodes(lastRenderIdRef.current);
-    }
-    const renderId = getRenderId();
-    lastRenderIdRef.current = renderId;
-
+    if (!code?.trim()) { setSvgContent(''); return; }
+    if (lastRenderIdRef.current) cleanupTempNodes(lastRenderIdRef.current);
+    const id = getRenderId();
+    lastRenderIdRef.current = id;
     try {
       mermaid.initialize({
-        startOnLoad: false,
-        theme: 'default',
-        securityLevel: 'loose',
+        startOnLoad: false, theme: 'default', securityLevel: 'loose',
         fontFamily: 'Georgia, serif',
         flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
         sequence: { useMaxWidth: false, actorMargin: 50 },
-        er: { useMaxWidth: false },
-        mindmap: { useMaxWidth: false },
+        er: { useMaxWidth: false }, mindmap: { useMaxWidth: false },
       });
-
-      const { svg } = await mermaid.render(renderId, code.trim());
+      const { svg } = await mermaid.render(id, code.trim());
       setSvgContent(svg);
       setRenderError(null);
     } catch (err) {
-      cleanupTempNodes(renderId);
-      const msg = (err?.message || String(err)).replace(/^Error:\s*/i, '').split('\n').slice(0, 4).join('\n');
-      setRenderError(msg);
+      cleanupTempNodes(id);
+      setRenderError((err?.message || String(err)).replace(/^Error:\s*/i, '').split('\n')[0]);
     }
   }, []);
 
-  // Update canvas SVG whenever element.code changes
-  useEffect(() => {
-    renderSvg(element.code || '');
-  }, [element.code, renderSvg]);
+  useEffect(() => { renderSvg(element.code || ''); }, [element.code, renderSvg]);
 
-  // Modal live preview renderer
+  // Live preview in drawer
   useEffect(() => {
-    if (!isModalOpen) return;
+    if (!isEditing) return;
     const t = setTimeout(async () => {
-      if (!draftCode.trim()) {
-        setModalPreviewSvg('');
-        setModalError(null);
-        return;
-      }
-      const previewId = getRenderId();
+      if (!draftCode.trim()) { setPreviewSvg(''); setPreviewError(null); return; }
+      const id = getRenderId();
       try {
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'default',
-          securityLevel: 'loose',
-          fontFamily: 'Georgia, serif',
-        });
-        const { svg } = await mermaid.render(previewId, draftCode.trim());
-        setModalPreviewSvg(svg);
-        setModalError(null);
+        mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+        const { svg } = await mermaid.render(id, draftCode.trim());
+        setPreviewSvg(svg);
+        setPreviewError(null);
       } catch (err) {
-        cleanupTempNodes(previewId);
-        setModalError((err?.message || String(err)).replace(/^Error:\s*/i, ''));
+        cleanupTempNodes(id);
+        setPreviewError((err?.message || String(err)).replace(/^Error:\s*/i, '').split('\n')[0]);
+        setPreviewSvg('');
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [draftCode, isModalOpen]);
+  }, [draftCode, isEditing]);
 
-  const handleOpenModal = (e) => {
+  const openEditor = (e) => {
     if (e) e.stopPropagation();
     setDraftCode(element.code || '');
-    setIsModalOpen(true);
+    setPreviewSvg('');
+    setPreviewError(null);
+    setIsEditing(true);
   };
 
-  const handleSaveModal = () => {
-    if (onUpdateCode) {
-      onUpdateCode(draftCode);
-    }
-    setIsModalOpen(false);
+  const handleSave = () => {
+    if (onUpdateCode) onUpdateCode(draftCode);
+    setIsEditing(false);
   };
+
+  const showControls = isSelected || isHovered;
 
   return (
     <>
-      {/* ── Canvas Node ────────────────────────────────────────── */}
+      <style>{`
+        @keyframes mDrawerIn {
+          from { opacity:0; transform:translateX(${spaceRight >= DRAWER_W ? '-10px' : '10px'}) scale(0.97); }
+          to   { opacity:1; transform:translateX(0) scale(1); }
+        }
+        .mermaid-node svg { max-width:100% !important; max-height:100% !important; }
+      `}</style>
+
+      {/* ── Canvas Node: transparent, no chrome ─────────────────── */}
       <div
-        onDoubleClick={handleOpenModal}
+        className="mermaid-node"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onDoubleClick={openEditor}
         style={{
           position: 'absolute',
-          left: `${left}px`,
-          top: `${top}px`,
-          width: `${width}px`,
-          height: `${height}px`,
+          left: `${left}px`, top: `${top}px`,
+          width: `${width}px`, height: `${height}px`,
           boxSizing: 'border-box',
-          border: isSelected ? '2px solid #6366f1' : '1px solid #cbd5e1',
-          borderRadius: '8px',
-          background: 'rgba(255, 255, 255, 0.96)',
-          boxShadow: isSelected ? '0 0 0 3px rgba(99, 102, 241, 0.2), 0 4px 16px rgba(0,0,0,0.06)' : '0 2px 8px rgba(0,0,0,0.04)',
-          overflow: 'hidden',
+          // Only show a border when selected or hovered — otherwise invisible
+          border: isEditing
+            ? '2px solid #6366f1'
+            : isSelected
+              ? '2px dashed #6366f1'
+              : isHovered
+                ? '1.5px dashed #a5b4fc'
+                : '1px dashed transparent',
+          borderRadius: '4px',
+          background: 'transparent',
+          overflow: 'visible',
           display: 'flex',
-          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           zIndex: isSelected ? 40 : 15,
-          cursor: isSelected ? 'move' : 'pointer',
+          cursor: isSelected ? 'move' : 'default',
           userSelect: 'none',
-          fontFamily: 'Georgia, serif',
-          fontWeight: 'normal',
+          transition: 'border-color 0.15s',
         }}
       >
-        {/* Node Toolbar */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '4px 10px',
-            background: isSelected ? '#f1f5f9' : '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
-            fontSize: '11px',
-            color: '#475569',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13 }}>📊</span>
-            <span>Mermaid Diagram</span>
+        {/* SVG content — rendered directly, no wrapper card */}
+        {renderError ? (
+          <div style={{
+            color: '#ef4444', fontSize: 11, textAlign: 'center',
+            background: 'rgba(255,241,241,0.9)', borderRadius: 6,
+            padding: '6px 10px', border: '1px solid #fca5a5',
+          }}>
+            ⚠️ {renderError}
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button
-              onClick={handleOpenModal}
-              title="Edit Mermaid Code"
-              style={{
-                background: '#ffffff',
-                border: '1px solid #cbd5e1',
-                borderRadius: '4px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                cursor: 'pointer',
-                color: '#334155',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              <span>✎</span> Edit
-            </button>
-            {isSelected && onDelete && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                title="Delete Diagram"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  color: '#94a3b8',
-                }}
-              >
-                ✕
-              </button>
-            )}
+        ) : svgContent ? (
+          <div
+            dangerouslySetInnerHTML={{ __html: svgContent }}
+            style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'none',
+            }}
+          />
+        ) : (
+          <div style={{
+            color: '#94a3b8', fontSize: 12,
+            background: 'rgba(248,250,252,0.85)',
+            border: '1px dashed #cbd5e1',
+            borderRadius: 6, padding: '10px 16px',
+          }}>
+            Double-click to add a Mermaid diagram
           </div>
-        </div>
+        )}
 
-        {/* Diagram SVG Viewport */}
-        <div
-          style={{
-            flex: 1,
-            overflow: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '8px',
-            position: 'relative',
-          }}
-        >
-          {renderError ? (
-            <div style={{ color: '#ef4444', fontSize: '11px', padding: 8, textAlign: 'center' }}>
-              <div>⚠️ Syntax Error</div>
-              <button
-                onClick={handleOpenModal}
-                style={{
-                  marginTop: 6,
-                  padding: '3px 8px',
-                  background: '#fee2e2',
-                  border: '1px solid #fca5a5',
-                  borderRadius: 4,
-                  fontSize: 10,
-                  cursor: 'pointer',
-                  color: '#b91c1c',
-                }}
-              >
-                Click to fix Mermaid code
-              </button>
-            </div>
-          ) : svgContent ? (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pointerEvents: 'none',
-              }}
-              dangerouslySetInnerHTML={{ __html: svgContent }}
-            />
-          ) : (
-            <div style={{ color: '#94a3b8', fontSize: '12px' }}>Double-click to add Mermaid code</div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Live Editable Modal / Drawer ────────────────────────── */}
-      {isModalOpen && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(15, 23, 42, 0.45)',
-            backdropFilter: 'blur(3px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '24px',
-            fontFamily: 'Georgia, serif',
-            fontWeight: 'normal',
-          }}
-        >
+        {/* Floating controls — only visible on hover/select */}
+        {showControls && (
           <div
             style={{
-              background: '#ffffff',
-              borderRadius: '12px',
-              width: '100%',
-              maxWidth: '960px',
-              height: '85vh',
-              maxHeight: '780px',
+              position: 'absolute',
+              top: -30,
+              right: 0,
               display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-              border: '1px solid #e2e8f0',
-              overflow: 'hidden',
+              gap: 5,
+              zIndex: 50,
             }}
+            onClick={e => e.stopPropagation()}
+            onMouseDown={e => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div
+            <button
+              onClick={openEditor}
               style={{
-                padding: '16px 20px',
-                borderBottom: '1px solid #e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#fafafa',
+                background: isEditing ? '#6366f1' : '#1e293b',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 5,
+                padding: '3px 10px',
+                fontSize: 11,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                display: 'flex', alignItems: 'center', gap: 4,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 18 }}>📊</span>
-                <span style={{ fontSize: 16, color: '#1e293b' }}>Edit Mermaid Diagram</span>
-              </div>
+              ✎ Edit
+            </button>
+            {onDelete && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                style={{
+                  background: '#ef4444', color: '#fff',
+                  border: 'none', borderRadius: 5,
+                  padding: '3px 8px', fontSize: 11,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                }}
+              >✕</button>
+            )}
+          </div>
+        )}
+      </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  style={{
-                    background: '#f1f5f9',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '6px 14px',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    color: '#475569',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveModal}
-                  style={{
-                    background: '#1a1a1a',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '6px 16px',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    color: '#ffffff',
-                  }}
-                >
-                  Apply & Save
-                </button>
-              </div>
+      {/* ── Inline Edit Drawer ───────────────────────────────────── */}
+      {isEditing && (
+        <div
+          onClick={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: `${drawerLeft}px`, top: `${drawerTop}px`,
+            width: `${DRAWER_W}px`, height: `${drawerH}px`,
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 10,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+            display: 'flex', flexDirection: 'column',
+            zIndex: 500,
+            fontFamily: 'Georgia, serif',
+            overflow: 'hidden',
+            animation: 'mDrawerIn 0.18s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
+          {/* Drawer Header */}
+          <div style={{
+            padding: '10px 14px', borderBottom: '1px solid #f1f5f9',
+            background: '#fafafa',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: 13, color: '#1e293b' }}>📊 Edit Diagram</span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={() => setIsEditing(false)}
+                style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer', color: '#475569' }}
+              >Cancel</button>
+              <button
+                onClick={handleSave}
+                style={{ background: '#6366f1', border: 'none', borderRadius: 6, padding: '4px 12px', fontSize: 12, cursor: 'pointer', color: '#fff' }}
+              >Apply</button>
             </div>
+          </div>
 
-            {/* Presets Bar */}
-            <div
+          {/* Presets */}
+          <div style={{
+            display: 'flex', gap: 5, padding: '7px 12px',
+            borderBottom: '1px solid #f1f5f9',
+            overflowX: 'auto', background: '#fafbfc', flexShrink: 0,
+          }}>
+            {PRESETS.map(p => (
+              <button
+                key={p.label}
+                onClick={() => setDraftCode(p.code)}
+                style={{
+                  background: '#fff', border: '1px solid #e2e8f0',
+                  borderRadius: 12, padding: '2px 9px',
+                  fontSize: 11, cursor: 'pointer', color: '#475569',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >{p.label}</button>
+            ))}
+          </div>
+
+          {/* Code textarea */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ padding: '4px 12px', fontSize: 10, color: '#94a3b8', background: '#fafafa', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
+              Mermaid syntax
+            </div>
+            <textarea
+              value={draftCode}
+              onChange={e => setDraftCode(e.target.value)}
+              placeholder="Enter Mermaid syntax…"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 20px',
-                background: '#f8fafc',
-                borderBottom: '1px solid #f1f5f9',
-                overflowX: 'auto',
+                flex: 1, padding: '10px 12px',
+                fontSize: 12, fontFamily: 'Consolas, "Courier New", monospace',
+                border: 'none', outline: 'none', resize: 'none',
+                lineHeight: 1.6, color: '#0f172a', background: '#fff',
               }}
-            >
-              <span style={{ fontSize: 12, color: '#64748b', marginRight: 4 }}>Templates:</span>
-              {PRESETS.map((p) => (
-                <button
-                  key={p.label}
-                  onClick={() => setDraftCode(p.code)}
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '16px',
-                    padding: '3px 12px',
-                    fontSize: '11.5px',
-                    cursor: 'pointer',
-                    color: '#334155',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            />
+          </div>
 
-            {/* Modal Body: Editor + Live Preview */}
-            <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-              {/* Left Column: Code Editor */}
+          {/* Live mini-preview */}
+          <div style={{
+            borderTop: '1px solid #f1f5f9', background: '#f8fafc',
+            flexShrink: 0, maxHeight: 110, overflow: 'hidden',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '8px',
+          }}>
+            {previewError ? (
+              <div style={{ color: '#ef4444', fontSize: 10 }}>⚠️ {previewError}</div>
+            ) : previewSvg ? (
               <div
-                style={{
-                  flex: 1,
-                  borderRight: '1px solid #e2e8f0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  background: '#ffffff',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '11px',
-                    color: '#64748b',
-                    borderBottom: '1px solid #f1f5f9',
-                    background: '#fafafa',
-                  }}
-                >
-                  Mermaid Source Code:
-                </div>
-                <textarea
-                  value={draftCode}
-                  onChange={(e) => setDraftCode(e.target.value)}
-                  placeholder="Enter Mermaid syntax..."
-                  style={{
-                    flex: 1,
-                    padding: '14px 16px',
-                    fontSize: '13px',
-                    fontFamily: 'Consolas, "Courier New", monospace',
-                    border: 'none',
-                    outline: 'none',
-                    resize: 'none',
-                    lineHeight: '1.55',
-                    color: '#0f172a',
-                    background: '#ffffff',
-                  }}
-                />
-                {modalError && (
-                  <div
-                    style={{
-                      padding: '10px 16px',
-                      background: '#fff5f5',
-                      borderTop: '1px solid #fed7d7',
-                      color: '#dc2626',
-                      fontSize: '11.5px',
-                      maxHeight: '80px',
-                      overflowY: 'auto',
-                    }}
-                  >
-                    ⚠️ {modalError}
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column: Live SVG Preview */}
-              <div
-                style={{
-                  flex: 1.2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  background: '#f8fafc',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '11px',
-                    color: '#64748b',
-                    borderBottom: '1px solid #e2e8f0',
-                    background: '#fafafa',
-                  }}
-                >
-                  Live Preview:
-                </div>
-                <div
-                  style={{
-                    flex: 1,
-                    overflow: 'auto',
-                    padding: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {modalPreviewSvg ? (
-                    <div
-                      dangerouslySetInnerHTML={{ __html: modalPreviewSvg }}
-                      style={{ maxWidth: '100%', maxHeight: '100%' }}
-                    />
-                  ) : (
-                    <div style={{ color: '#94a3b8', fontSize: '13px' }}>
-                      {modalError ? 'Fix syntax error to see preview' : 'No diagram code entered'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+                dangerouslySetInnerHTML={{ __html: previewSvg }}
+                style={{ maxWidth: '100%', maxHeight: '100px', overflow: 'hidden' }}
+              />
+            ) : (
+              <div style={{ color: '#cbd5e1', fontSize: 11 }}>Live preview…</div>
+            )}
           </div>
         </div>
       )}
